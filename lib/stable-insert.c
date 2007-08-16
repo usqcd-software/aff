@@ -38,5 +38,6 @@ aff_st_insert(struct AffSTable_s *st, const char *name)
     }
     st->size = sym->id;
     b->used++;
+    st->file_size += len;
     return sym->id;
 }
