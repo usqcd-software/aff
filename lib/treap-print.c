@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
-#include "hash-i.h"
+#include "treap-i.h"
 
 static void
 print_data(const char *ptr, int len)
@@ -32,7 +32,7 @@ print(int l, struct Node_s *n, struct Node_s *r, int (*gs)(const void *))
 
 
 void
-aff_h_print(struct AffHash_s *h, int (*get_vsize)(const void *))
+aff_h_print(struct AffTreap_s *h, int (*get_vsize)(const void *))
 {
     if (h == 0) {
 	printf("NULL HASH\n");

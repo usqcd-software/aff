@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <stdlib.h>
-#include "hash-i.h"
+#include "treap-i.h"
 
 static void
 h_free(struct Node_s *n)
@@ -13,7 +13,7 @@ h_free(struct Node_s *n)
 }
 
 void *
-aff_h_fini(struct AffHash_s *h)
+aff_h_fini(struct AffTreap_s *h)
 {
     if (h) {
 	h_free(h->root);

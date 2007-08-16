@@ -1,9 +1,9 @@
 #include <stdint.h>
 #include <string.h>
-#include "hash-i.h"
+#include "treap-i.h"
 
 void *
-aff_h_lookup(const struct AffHash_s *h, const void *key, int ksize)
+aff_h_lookup(const struct AffTreap_s *h, const void *key, int ksize)
 {
     struct Node_s *n;
 

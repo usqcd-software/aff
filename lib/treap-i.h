@@ -1,6 +1,6 @@
 #ifndef MARK_8f2f88f3_916a_4206_9245_2a8f45a9768c
 #define MARK_8f2f88f3_916a_4206_9245_2a8f45a9768c
-#include "hash.h"
+#include "treap.h"
 
 /* Definition of the hash table entry */
 struct Node_s {
@@ -13,7 +13,7 @@ struct Node_s {
 };
 
 /* Definition of the hash table proper */
-struct AffHash_s {
+struct AffTreap_s {
     uint32_t       state;   /* random state to make hash thread safe */
     struct Node_s *root;    /* the root of the hash */
 };

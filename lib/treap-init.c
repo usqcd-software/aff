@@ -1,11 +1,11 @@
 #include <stdint.h>
 #include <stdlib.h>
-#include "hash-i.h"
+#include "treap-i.h"
 
-struct AffHash_s *
+struct AffTreap_s *
 aff_h_init(void)
 {
-    struct AffHash_s *h = malloc(sizeof (struct AffHash_s));
+    struct AffTreap_s *h = malloc(sizeof (struct AffTreap_s));
     if (h == 0)
 	return 0;
 

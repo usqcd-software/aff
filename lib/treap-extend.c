@@ -1,10 +1,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "hash-i.h"
+#include "treap-i.h"
 
 int
-aff_h_extend(struct AffHash_s *h, const void *key, int size, void *data)
+aff_h_extend(struct AffTreap_s *h, const void *key, int size, void *data)
 {
     struct Node_s *q;
     struct Node_s *p;
