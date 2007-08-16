@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-#include "hash.h"
+#include "treap.h"
 
 #define SIZE 1024
 static char buffer[SIZE];
@@ -17,7 +17,7 @@ get_size(const void *p)
 int
 main(int argc, char *argv[])
 {
-    struct AffHash_s *h = aff_h_init();
+    struct AffTreap_s *h = aff_h_init();
     char *ptr;
     int status;
 

@@ -47,3 +47,6 @@ lhpc-aff cmd [args]
 Useful prieces:
 
 MD5 checksum routines are in <openssl/md5.h>.
+Treap management routines are written.
+Stable routines are written.
+
