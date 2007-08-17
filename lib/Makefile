@@ -45,7 +45,8 @@ tree.sources = tree-fini.c \
                tree-root.c \
                tree-fsize.c \
                tree-size.c \
-               tree-type.c
+               tree-type.c \
+               tree-nforeach.c
 
 tree.headers = tree-i.h \
                tree.h

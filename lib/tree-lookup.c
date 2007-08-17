@@ -3,7 +3,7 @@
 #include "tree-i.h"
 #include "treap.h"
 
-const struct AffTreeNode_s *
+struct AffTreeNode_s *
 aff_tt_lookup(const struct AffTree_s *tt,
 	      const struct AffTreeNode_s *parent,
 	      uint32_t name)

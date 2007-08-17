@@ -5,8 +5,9 @@
 static void
 print_node(const struct AffTreeNode_s *node, void *arg)
 {
-    printf(" %016llx: [%016llx %08x] ",
-	   node->id, node->key.pId, node->key.nId);
+    printf(" %16p %016llx: [%016llx %08x %16p %16p] ",
+	   node, node->id, node->key.pId, node->key.nId,
+	   node->children, node->next);
     switch (node->type) {
     case affNodeInvalid:
 	printf("unvalid node\n");

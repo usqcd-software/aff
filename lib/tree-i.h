@@ -10,12 +10,13 @@ struct Key_s {
 };
 
 struct AffTreeNode_s {
-    enum AffNodeType_e type;
-    struct Key_s       key;
-    uint64_t           id;
-    uint32_t           size;
-    uint64_t           offset;
-    
+    enum AffNodeType_e    type;
+    struct Key_s          key;
+    uint64_t              id;
+    uint32_t              size;
+    uint64_t              offset;
+    struct AffTreeNode_s *next;
+    struct AffTreeNode_s *children;
 };
 
 struct Block_s {

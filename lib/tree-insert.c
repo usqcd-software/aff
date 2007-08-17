@@ -4,9 +4,9 @@
 #include "tree-i.h"
 #include "treap.h"
 
-const struct AffTreeNode_s *
+struct AffTreeNode_s *
 aff_tt_insert(struct AffTree_s *tt,
-	      const struct AffTreeNode_s *parent,
+	      struct AffTreeNode_s *parent,
 	      uint32_t nameId,
 	      enum AffNodeType_e type,
 	      uint32_t size,
@@ -61,6 +61,8 @@ aff_tt_insert(struct AffTree_s *tt,
     n->size = type;
     n->offset = offset;
     n->id = tt->size + 1;
+    n->next = parent->children;
+    parent->children = n;
     if (aff_h_extend(tt->treap, &n->key, sizeof (struct Key_s), n) != 0) {
 	return 0;
     }

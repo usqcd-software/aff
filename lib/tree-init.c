@@ -25,6 +25,8 @@ aff_tt_init(void)
     tt->root.id = 1;
     tt->root.size = 0;
     tt->root.offset = 0;
+    tt->root.next = 0;
+    tt->root.children = 0;
     aff_tt_iblock(&tt->block, 2);
 
     return tt;
