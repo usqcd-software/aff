@@ -3,7 +3,7 @@
 
 void
 aff_st_foreach(const struct AffSTable_s *st,
-               void (*proc)(const char *name, uint32_t index, void *arg),
+               void (*proc)(const struct AffSymbol_s *sym, void *arg),
 	       void *arg)
 {
     const struct Block_s *b;
@@ -14,7 +14,7 @@ aff_st_foreach(const struct AffSTable_s *st,
 
     for (b = &st->block; b; b = b->next) {
 	for (i = 0; i < b->used; i++) {
-	    proc(b->symbol[i].name, b->symbol[i].id, arg);
+	    proc(&b->symbol[i], arg);
 	}
     }
 }

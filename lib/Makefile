@@ -26,7 +26,9 @@ stable.sources = stable-fini.c \
                  stable-fsize.c \
                  stable-insert.c \
                  stable-iblock.c \
-                 stable-lookup.c
+                 stable-lookup.c \
+                 stable-name.c \
+                 stable-id.c \
 
 stable.headers = stable-i.h \
                  stable.h
@@ -46,7 +48,9 @@ tree.sources = tree-fini.c \
                tree-fsize.c \
                tree-size.c \
                tree-type.c \
-               tree-nforeach.c
+               tree-nforeach.c \
+               tree-index.c \
+               tree-assign.c
 
 tree.headers = tree-i.h \
                tree.h
@@ -74,4 +78,4 @@ $(sources:%.c=%.o): %.o: %.c
 
 $(treap.sources:%.c=%.o): $(treap.headers)
 $(stable.sources:%.c=%.o): $(stable.headers) treap.h
-$(tree.sources:%.c=%.o): $(tree.headers) treap.h
+$(tree.sources:%.c=%.o): $(tree.headers) treap.h stable.h

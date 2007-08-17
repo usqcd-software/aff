@@ -11,7 +11,7 @@ int
 main(int argc, char *argv[])
 {
     struct AffSTable_s *stable;
-    uint32_t id;
+    const struct AffSymbol_s *s;
     
     stable = aff_st_init();
     for (;;) {
@@ -21,8 +21,8 @@ main(int argc, char *argv[])
 	    break;
 	if (sscanf(buffer, "%s", sym) != 1)
 	    continue;
-	id = aff_st_insert(stable, sym);
-	printf("insert(%s)=%d\n", sym, id);
+	s = aff_st_insert(stable, sym);
+	printf("insert(%32s) = %16p\n", sym, s);
     }
     aff_st_print(stable);
     stable = aff_st_fini(stable);

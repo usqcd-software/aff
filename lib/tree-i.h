@@ -5,8 +5,8 @@
 #define BLOCK_SIZE 1024
 
 struct Key_s {
-    uint64_t pId;
-    uint32_t nId;
+    const struct AffTreeNode_s  *parent;
+    const struct AffSymbol_s    *name;
 };
 
 struct AffTreeNode_s {

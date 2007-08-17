@@ -3,9 +3,9 @@
 #include "stable-i.h"
 
 static void
-print_string(const char *name, uint32_t id, void *arg)
+print_string(const struct AffSymbol_s *sym, void *arg)
 {
-    printf(" %08x: %s\n", id, name);
+    printf(" %08x: %s\n", aff_sym_id(sym), aff_sym_name(sym));
 }
 
 void

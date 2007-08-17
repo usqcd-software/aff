@@ -4,16 +4,16 @@
 
 #define BLOCK_SIZE 1024
 
-struct Symbol_s {
+struct AffSymbol_s {
     const char *name;
     uint32_t    id;
 };
 
 struct Block_s {
-    struct Block_s *next;
-    uint32_t        start;
-    uint32_t        used;
-    struct Symbol_s symbol[BLOCK_SIZE];
+    struct Block_s     *next;
+    uint32_t            start;
+    uint32_t            used;
+    struct AffSymbol_s  symbol[BLOCK_SIZE];
 };
 
 struct AffSTable_s {

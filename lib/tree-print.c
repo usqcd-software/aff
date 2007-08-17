@@ -1,13 +1,16 @@
 #include <stdint.h>
 #include <stdio.h>
+#include "treap.h"
+#include "stable.h"
 #include "tree-i.h"
 
 static void
 print_node(const struct AffTreeNode_s *node, void *arg)
 {
-    printf(" %16p %016llx: [%016llx %08x %16p %16p] ",
-	   node, node->id, node->key.pId, node->key.nId,
-	   node->children, node->next);
+    printf(" %16p %016llx: [%16p %16p %16p %32s] ",
+	   node, node->id,
+	   node->children, node->next,
+	   node->key.parent, aff_sym_name(node->key.name));
     switch (node->type) {
     case affNodeInvalid:
 	printf("unvalid node\n");

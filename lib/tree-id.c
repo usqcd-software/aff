@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include "treap.h"
+#include "stable.h"
 #include "tree-i.h"
 
 uint64_t

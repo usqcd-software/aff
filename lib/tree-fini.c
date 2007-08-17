@@ -1,7 +1,8 @@
 #include <stdint.h>
 #include <stdlib.h>
-#include "tree-i.h"
 #include "treap.h"
+#include "stable.h"
+#include "tree-i.h"
 
 void *
 aff_tt_fini(struct AffTree_s *tt)

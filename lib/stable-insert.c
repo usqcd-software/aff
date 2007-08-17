@@ -4,11 +4,11 @@
 #include "stable-i.h"
 #include "treap.h"
 
-uint32_t
+const struct AffSymbol_s *
 aff_st_insert(struct AffSTable_s *st, const char *name)
 {
     struct Block_s *b;
-    struct Symbol_s *sym;
+    struct AffSymbol_s *sym;
     int len;
 
     if (st == 0 || name == 0)
@@ -17,7 +17,7 @@ aff_st_insert(struct AffSTable_s *st, const char *name)
     len = strlen(name) + 1;
     sym = aff_h_lookup(st->treap, name, len);
     if (sym)
-	return sym->id;
+	return sym;
 
     if (st->last_block->used == BLOCK_SIZE) {
 	b = malloc(sizeof (struct Block_s));
@@ -40,5 +40,5 @@ aff_st_insert(struct AffSTable_s *st, const char *name)
     b->used++;
     st->size = sym->id;
     st->file_size += len;
-    return sym->id;
+    return sym;
 }

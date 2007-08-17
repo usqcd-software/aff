@@ -1,5 +1,8 @@
 #include <stdint.h>
+#include "treap.h"
+#include "stable.h"
 #include "tree-i.h"
+
 
 void
 aff_n_foreach(const struct AffTreeNode_s *node,

@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include "stable-i.h"
 
-const char *
+const struct AffSymbol_s *
 aff_st_index(const struct AffSTable_s *st, uint32_t index)
 {
     const struct Block_s *b;
@@ -12,7 +12,7 @@ aff_st_index(const struct AffSTable_s *st, uint32_t index)
 	if (index < b->start)
 	    return 0;
 	if (index < b->start + b->used)
-	    return b->symbol[b->start - index].name;
+	    return &b->symbol[b->start - index];
     }
     return 0;
 }
