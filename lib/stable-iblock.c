@@ -2,7 +2,7 @@
 #include "stable-i.h"
 
 void
-aff_st_iblock(struct Block_s *block, int start)
+aff_stable_iblock(struct Block_s *block, int start)
 {
     block->next = 0;
     block->start = start;

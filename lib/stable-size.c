@@ -2,7 +2,7 @@
 #include "stable-i.h"
 
 uint32_t
-aff_st_size(const struct AffSTable_s *st)
+aff_stable_size(const struct AffSTable_s *st)
 {
     if (st == 0)
 	return 0;

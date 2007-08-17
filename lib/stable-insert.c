@@ -1,11 +1,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "stable-i.h"
 #include "treap.h"
+#include "stable-i.h"
 
 const struct AffSymbol_s *
-aff_st_insert(struct AffSTable_s *st, const char *name)
+aff_stable_insert(struct AffSTable_s *st, const char *name)
 {
     struct Block_s *b;
     struct AffSymbol_s *sym;
@@ -15,7 +15,7 @@ aff_st_insert(struct AffSTable_s *st, const char *name)
 	return 0;
 
     len = strlen(name) + 1;
-    sym = aff_h_lookup(st->treap, name, len);
+    sym = aff_treap_lookup(st->treap, name, len);
     if (sym)
 	return sym;
 
@@ -33,7 +33,7 @@ aff_st_insert(struct AffSTable_s *st, const char *name)
     if (sym->name == 0)
 	return 0;
     sym->id = st->size + 1;
-    if (aff_h_extend(st->treap, sym->name, len, sym) != 0) {
+    if (aff_treap_extend(st->treap, sym->name, len, sym) != 0) {
 	free((void *)sym->name);
 	return 0;
     }

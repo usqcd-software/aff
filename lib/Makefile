@@ -6,7 +6,8 @@ library = liblhpc-aff.a
 
 sources=$(treap.sources) \
         $(stable.sources) \
-        $(tree.sources)
+        $(tree.sources) \
+        $(node.sources)
 
 treap.sources = treap-extend.c	\
                 treap-fini.c \
@@ -35,25 +36,23 @@ stable.headers = stable-i.h \
 
 tree.sources = tree-fini.c \
                tree-foreach.c \
+               tree-fsize.c \
                tree-iblock.c \
-               tree-id.c \
+               tree-index.c \
                tree-init.c \
                tree-insert.c \
                tree-lookup.c \
-               tree-name.c \
-               tree-offset.c \
-               tree-parent.c \
                tree-print.c \
                tree-root.c \
-               tree-fsize.c \
-               tree-size.c \
-               tree-type.c \
-               tree-nforeach.c \
-               tree-index.c \
-               tree-assign.c
+               tree-size.c
 
 tree.headers = tree-i.h \
                tree.h
+
+node.sources = node-foreach.c
+
+node.headers = node-i.h \
+               node.h
 
 .PHONY: all clean realclean install
 
@@ -78,4 +77,4 @@ $(sources:%.c=%.o): %.o: %.c
 
 $(treap.sources:%.c=%.o): $(treap.headers)
 $(stable.sources:%.c=%.o): $(stable.headers) treap.h
-$(tree.sources:%.c=%.o): $(tree.headers) treap.h stable.h
+$(tree.sources:%.c=%.o): $(tree.headers) treap.h stable.h node.h node-i.h

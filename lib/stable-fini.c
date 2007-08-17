@@ -4,13 +4,13 @@
 #include "treap.h"
 
 void *
-aff_st_fini(struct AffSTable_s *st)
+aff_stable_fini(struct AffSTable_s *st)
 {
     struct Block_s *bl;
 
     if (st == 0)
 	return 0;
-    aff_h_fini(st->treap);
+    aff_treap_fini(st->treap);
     for (bl = st->block.next; bl;) {
 	struct Block_s *n = bl->next;
 	free(bl);

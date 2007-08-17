@@ -3,20 +3,20 @@
 #include "treap-i.h"
 
 static void
-h_free(struct Node_s *n)
+treap_free(struct Node_s *n)
 {
     if (n) {
-	h_free(n->left);
-	h_free(n->right);
+	treap_free(n->left);
+	treap_free(n->right);
 	free(n);
     }
 }
 
 void *
-aff_h_fini(struct AffTreap_s *h)
+aff_treap_fini(struct AffTreap_s *h)
 {
     if (h) {
-	h_free(h->root);
+	treap_free(h->root);
 	free(h);
     }
 

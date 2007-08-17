@@ -2,9 +2,9 @@
 #include "stable-i.h"
 
 void
-aff_st_foreach(const struct AffSTable_s *st,
-               void (*proc)(const struct AffSymbol_s *sym, void *arg),
-	       void *arg)
+aff_stable_foreach(const struct AffSTable_s *st,
+		   void (*proc)(const struct AffSymbol_s *sym, void *arg),
+		   void *arg)
 {
     const struct Block_s *b;
     uint32_t i;

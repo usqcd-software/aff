@@ -3,7 +3,7 @@
 #include "treap-i.h"
 
 struct AffTreap_s *
-aff_h_init(void)
+aff_treap_init(void)
 {
     struct AffTreap_s *h = malloc(sizeof (struct AffTreap_s));
     if (h == 0)

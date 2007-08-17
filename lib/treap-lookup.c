@@ -3,7 +3,7 @@
 #include "treap-i.h"
 
 void *
-aff_h_lookup(const struct AffTreap_s *h, const void *key, int ksize)
+aff_treap_lookup(const struct AffTreap_s *h, const void *key, int ksize)
 {
     struct Node_s *n;
 

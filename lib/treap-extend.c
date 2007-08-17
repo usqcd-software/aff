@@ -4,7 +4,7 @@
 #include "treap-i.h"
 
 int
-aff_h_extend(struct AffTreap_s *h, const void *key, int size, void *data)
+aff_treap_extend(struct AffTreap_s *h, const void *key, int size, void *data)
 {
     struct Node_s *q;
     struct Node_s *p;

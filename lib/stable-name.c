@@ -2,7 +2,7 @@
 #include "stable-i.h"
 
 const char *
-aff_sym_name(const struct AffSymbol_s *sym)
+aff_symbol_name(const struct AffSymbol_s *sym)
 {
     if (sym == 0)
 	return 0;

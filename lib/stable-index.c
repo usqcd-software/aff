@@ -2,7 +2,7 @@
 #include "stable-i.h"
 
 const struct AffSymbol_s *
-aff_st_index(const struct AffSTable_s *st, uint32_t index)
+aff_stable_index(const struct AffSTable_s *st, uint32_t index)
 {
     const struct Block_s *b;
 

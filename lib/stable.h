@@ -8,6 +8,8 @@
  *  size() returns the largest valid index in the table.
  *  file_size() returns the number of bytes it takes to store the table.
  *  for_each() goes through indices in order and is exposed for uniformity.
+ *
+ * Symbol ids are assigned sequentially starting from 0.
  */
 struct AffSTable_s;
 struct AffSymbol_s;

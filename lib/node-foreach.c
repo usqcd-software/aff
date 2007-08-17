@@ -1,15 +1,14 @@
 #include <stdint.h>
-#include "treap.h"
-#include "stable.h"
-#include "tree-i.h"
+#include <stdarg.h>
+#include "node-i.h"
 
 
 void
-aff_n_foreach(const struct AffTreeNode_s *node,
-	      void (*proc)(const struct AffTreeNode_s *node, void *arg),
-	      void *arg)
+aff_node_foreach(struct AffNode_s *node,
+		 void (*proc)(struct AffNode_s *node, void *arg),
+		 void *arg)
 {
-    const struct AffTreeNode_s *ch;
+    struct AffNode_s *ch;
     
     if (node == 0)
 	return;
