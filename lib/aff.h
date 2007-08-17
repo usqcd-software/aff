@@ -1,42 +1,6 @@
 #ifndef MARK_c7329614_7d7a_4efe_9f6d_87477961bc99
 #define MARK_c7329614_7d7a_4efe_9f6d_87477961bc99
 
-/* AFF reverse path structure */
-struct AffReversePath_s {
-    const struct AffReversePath_s *parent;
-    const char *name;
-};
-
-/* Aff nodes.
- *  These are used both in the reader and the writer.
- * cd*() walk the tree. If the create argument is zero, missing elements of
- *       the pass will result in error (NULL is returned), otherwise, missing
- *       components will be created in the path. Freshly created components
- *       could be assigned, their initial type is affNodeVoid.
- * foreach() traverses children of the node.
- * name(), parent(), type(), and size() access attribute of the node.
- */
-struct AffNode_s;
-
-struct AffNode_t *aff_node_cdp(struct AffNode_s *n,
-			       int create,
-			       struct AffReversePath_s *p);
-struct AffNode_t *aff_node_cdv(struct AffNode_s *n,
-			       int create,
-			       va_list va);
-struct AffNode_t *aff_node_cd(struct AffSTable_s *stable,
-			      struct AffNode_s *n,
-			      int create,
-			      const char *name, ...);
-void aff_node_foreach(struct AffNode_s *n,
-		      void (*proc)(struct AffNode_s *child,
-				   void *arg),
-		      void *arg);
-const char *aff_node_name(struct AffNode_s *n);
-struct AffNode_t *aff_node_parent(struct AffNode_s *n);
-enum AffNodeType_e aff_node_type(struct AffNode_s *n);
-uint32_t aff_node_size(struct AffNode_s *n);
-
 /* AFF objects. Writers.
  *
  * writer() prepares to write an aff file. If it exists the file is deleted
@@ -54,7 +18,10 @@ int aff_writer_close(struct AffWriter_s *aff);
 const char *aff_writer_errstr(struct AffWriter_s *aff);
 struct AffSTable_s *aff_stable(struct AffWriter_s *aff);
 struct AffNode_t *aff_writer_root(struct AffWriter_s *aff);
-
+void aff_writer_foreach(struct AffWriter_s *aff,
+			void (*proc)(struct AffNode_s *node,
+				     void *arg),
+			void *arg);
 int aff_node_put_char(struct AffWriter_s *aff,
 		      struct AffNode_s *n,
 		      const char *d,

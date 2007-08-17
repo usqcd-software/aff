@@ -24,7 +24,7 @@ struct AffSTable_s {
     struct Block_s    *last_block;
 };
 
-void aff_st_iblock(struct Block_s *block, int start);
+void aff_stable_iblock(struct Block_s *block, int start);
 
 
 #endif /* !defined(MARK_ccee59e4_4306_46b9_a6f0_df315a0233fe) */

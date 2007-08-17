@@ -13,10 +13,15 @@
  */
 struct AffTreap_s;
 
-struct AffTreap_s *aff_h_init(void);
-void *aff_h_fini(struct AffTreap_s *h);
-void *aff_h_lookup(const struct AffTreap_s *h, const void *key, int ksize);
-int aff_h_extend(struct AffTreap_s *h, const void *key, int ksize, void *data);
-void aff_h_print(struct AffTreap_s *h, int (*get_vsize)(const void *));
+struct AffTreap_s *aff_treap_init(void);
+void *aff_treap_fini(struct AffTreap_s *h);
+void *aff_treap_lookup(const struct AffTreap_s *h,
+		       const void *key,
+		       int ksize);
+int aff_treap_insert(struct AffTreap_s *h,
+		     const void *key,
+		     int ksize,
+		     void *data);
+void aff_treap_print(struct AffTreap_s *h, int (*get_vsize)(const void *));
 
 #endif /* !defined(MARK_8e4c7147_43c7_404f_8741_eebfda2d8717) */

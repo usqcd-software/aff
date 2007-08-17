@@ -6,7 +6,7 @@
 struct Node_s {
     const void    *key;      /* malloced, key is always copied. */
     int            key_size; /* size of the key in bytes */
-    void          *value;    /* generic value, we use uint32_t and uint64_t */
+    void          *value;    /* generic value */
     uint32_t       hash;     /* internal balancing value */
     struct Node_s *left;     /* left subtree */
     struct Node_s *right;    /* right subtree */
