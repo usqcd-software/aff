@@ -5,7 +5,8 @@ prefix = .
 library = liblhpc-aff.a
 
 sources=$(treap.sources) \
-        $(stable.sources)
+        $(stable.sources) \
+        $(tree.sources)
 
 treap.sources = treap-extend.c	\
                 treap-fini.c \
@@ -30,6 +31,25 @@ stable.sources = stable-fini.c \
 stable.headers = stable-i.h \
                  stable.h
 
+tree.sources = tree-fini.c \
+               tree-foreach.c \
+               tree-iblock.c \
+               tree-id.c \
+               tree-init.c \
+               tree-insert.c \
+               tree-lookup.c \
+               tree-name.c \
+               tree-offset.c \
+               tree-parent.c \
+               tree-print.c \
+               tree-root.c \
+               tree-fsize.c \
+               tree-size.c \
+               tree-type.c
+
+tree.headers = tree-i.h \
+               tree.h
+
 .PHONY: all clean realclean install
 
 all: $(library)
@@ -48,13 +68,9 @@ $(library): $(sources:%.c=%.o)
 	ar cr $(library) $(sources:%.c=%.o)
 	ranlib $(library)
 
-$(treap.sources:%.c=%.o): %.o: %.c
+$(sources:%.c=%.o): %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(treap.sources:%.c=%.o): $(treap.headers)
-
-$(stable.sources:%.c=%.o): %.o: %.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
 $(stable.sources:%.c=%.o): $(stable.headers) treap.h
-
+$(tree.sources:%.c=%.o): $(tree.headers) treap.h
