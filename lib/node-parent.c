@@ -1,12 +1,11 @@
 #include <stdint.h>
-#include "treap.h"
-#include "stable.h"
-#include "tree-i.h"
+#include <stdarg.h>
+#include "node-i.h"
 
-const struct AffTreeNode_s *
-aff_n_parent(const struct AffTreeNode_s *tn)
+struct AffNode_s *
+aff_node_parent(const struct AffNode_s *tn)
 {
     if (tn == 0)
 	return 0;
-    return tn->key.parent;
+    return (struct AffNode_s *)tn->key.parent;
 }

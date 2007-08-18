@@ -9,7 +9,7 @@ sources=$(treap.sources) \
         $(tree.sources) \
         $(node.sources)
 
-treap.sources = treap-extend.c	\
+treap.sources = treap-insert.c	\
                 treap-fini.c \
 	        treap-init.c \
                 treap-lookup.c \
@@ -49,7 +49,18 @@ tree.sources = tree-fini.c \
 tree.headers = tree-i.h \
                tree.h
 
-node.sources = node-foreach.c
+node.sources = node-foreach.c \
+               node-id.c \
+               node-name.c \
+               node-parent.c \
+               node-type.c \
+               node-size.c \
+               node-offset.c \
+               node-assign.c \
+               node-cda.c \
+               node-cdp.c \
+               node-cdv.c \
+               node-cd.c
 
 node.headers = node-i.h \
                node.h
@@ -75,6 +86,7 @@ $(library): $(sources:%.c=%.o)
 $(sources:%.c=%.o): %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+$(node.sources:%.c=%.o): $(node.headers)
 $(treap.sources:%.c=%.o): $(treap.headers)
 $(stable.sources:%.c=%.o): $(stable.headers) treap.h
 $(tree.sources:%.c=%.o): $(tree.headers) treap.h stable.h node.h node-i.h

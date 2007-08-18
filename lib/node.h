@@ -22,9 +22,9 @@
  *  otherwise, missing components will be added to the tree and symbol table.
  *
  * cda() walks through a given sequence of path elments. The list ends with NULL
- * cdp() takes a linked list of path elements in the reverse order and walks it
  * cd()  takes a list as separate arguments, the last argument must be NULL.
  * cdv() takes arguments of cd() converted into va_list.
+ * chdir() moves one step through the tree.
  *
  * There are also node manipulation routines in AFF readers and writers.
  */
@@ -39,12 +39,6 @@ enum AffNodeType_e {
     affNodeComplex
 };
 
-/* AFF reverse path structure */
-struct AffReversePath_s {
-    const struct AffReversePath_s *parent;
-    const char *name;
-};
-
 struct AffTree_s;
 struct AffSTable_s;
 
@@ -53,8 +47,8 @@ void aff_node_foreach(struct AffNode_s *n,
 				   void *arg),
 		      void *arg);
 uint64_t aff_node_id(const struct AffNode_s *tn);
-const struct AFfSymbol_s*aff_node_name(const struct AffNode_s *n);
-struct AffNode_t *aff_node_parent(const struct AffNode_s *n);
+const struct AffSymbol_s*aff_node_name(const struct AffNode_s *n);
+struct AffNode_s *aff_node_parent(const struct AffNode_s *n);
 enum AffNodeType_e aff_node_type(const struct AffNode_s *n);
 uint32_t aff_node_size(const struct AffNode_s *n);
 uint64_t aff_node_offset(const struct AffNode_s *tn);
@@ -63,26 +57,25 @@ int aff_node_assign(struct AffNode_s *node,
 		    uint32_t size,
 		    uint64_t offset);
 
-struct AffNode_t *aff_node_cda(struct AffTree_s *tree,
+struct AffNode_s *aff_node_chdir(struct AffTree_s *tree,
+				 struct AffSTable_s *stable,
+				 struct AffNode_s *n,
+				 int create,
+				 const char *p);
+struct AffNode_s *aff_node_cda(struct AffTree_s *tree,
 			       struct AffSTable_s *stable,
 			       struct AffNode_s *n,
 			       int create,
 			       const char *p[]);
-struct AffNode_t *aff_node_cdp(struct AffTree_s *tree,
-			       struct AffSTable_s *stable,
-			       struct AffNode_s *n,
-			       int create,
-			       struct AffReversePath_s *rp);
-struct AffNode_t *aff_node_cdv(struct AffTree_s *tree,
+struct AffNode_s *aff_node_cdv(struct AffTree_s *tree,
 			       struct AffSTable_s *stable,
 			       struct AffNode_s *n,
 			       int create,
 			       va_list va);
-struct AffNode_t *aff_node_cd(struct AffTree_s *tree,
+struct AffNode_s *aff_node_cd(struct AffTree_s *tree,
 			      struct AffSTable_s *stable,
 			      struct AffNode_s *n,
 			      int create,
-			      const char *name, ...);
-
+			      ...);
 
 #endif /* !defined(MARK_a4d076cf_516e_4864_861a_ed8239937ca5) */

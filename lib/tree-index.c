@@ -1,12 +1,14 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include "treap.h"
 #include "stable.h"
+#include "node-i.h"
 #include "tree-i.h"
 
-struct AffTreeNode_s *
-aff_tt_index(const struct AffTree_s *tt, uint64_t index)
+struct AffNode_s *
+aff_tree_index(const struct AffTree_s *tt, uint64_t index)
 {
     const struct Block_s *b;
 
@@ -16,7 +18,7 @@ aff_tt_index(const struct AffTree_s *tt, uint64_t index)
 	if (index < b->start)
 	    return 0;
 	if (index < b->start + b->used)
-	    return (struct AffTreeNode_s *)&b->node[b->start - index];
+	    return (struct AffNode_s *)&b->node[b->start - index];
     }
     return 0;
 }

@@ -1,10 +1,9 @@
 #include <stdint.h>
-#include "treap.h"
-#include "stable.h"
-#include "tree-i.h"
+#include <stdarg.h>
+#include "node-i.h"
 
 uint64_t
-aff_n_id(const struct AffTreeNode_s *tn)
+aff_node_id(const struct AffNode_s *tn)
 {
     if (tn == 0)
 	return 0;

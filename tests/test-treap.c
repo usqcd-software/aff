@@ -17,7 +17,7 @@ get_size(const void *p)
 int
 main(int argc, char *argv[])
 {
-    struct AffTreap_s *h = aff_h_init();
+    struct AffTreap_s *h = aff_treap_init();
     char *ptr;
     int status;
 
@@ -29,20 +29,20 @@ main(int argc, char *argv[])
 	status = sscanf(buffer, "%s %s", key, value);
 	switch (status) {
 	case 1:
-	    ptr = aff_h_lookup(h, key, strlen(key) + 1);
+	    ptr = aff_treap_lookup(h, key, strlen(key) + 1);
 	    printf("lookup(%s)=%s\n", key, ptr);
 	    break;
 	case 2:
-	    status = aff_h_extend(h, strdup(key), strlen(key) + 1,
-				  strdup(value));
+	    status = aff_treap_extend(h, strdup(key), strlen(key) + 1,
+				      strdup(value));
 	    printf("insert(%s, %s) = %d\n", key, value, status);
 	    break;
 	default:
 	    continue;
 	}
     }
-    aff_h_print(h, get_size);
-    aff_h_fini(h);
+    aff_treap_print(h, get_size);
+    aff_treap_fini(h);
 	
     return 0;
 }

@@ -1,11 +1,10 @@
 #include <stdint.h>
-#include "treap.h"
-#include "stable.h"
-#include "tree-i.h"
+#include <stdarg.h>
+#include "node-i.h"
 
 
 enum AffNodeType_e
-aff_n_type(const struct AffTreeNode_s *tn)
+aff_node_type(const struct AffNode_s *tn)
 {
     if (tn == 0)
 	return affNodeInvalid;

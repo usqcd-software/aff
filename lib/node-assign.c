@@ -1,15 +1,12 @@
 #include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include "treap.h"
-#include "stable.h"
-#include "tree-i.h"
+#include <stdarg.h>
+#include "node-i.h"
 
 int
-aff_n_assign(struct AffTreeNode_s *node,
-	     enum AffNodeType_e type,
-	     uint32_t size,
-	     uint64_t offset)
+aff_node_assign(struct AffNode_s *node,
+		enum AffNodeType_e type,
+		uint32_t size,
+		uint64_t offset)
 {
     if (node == 0)
 	return 1;

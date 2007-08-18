@@ -1,12 +1,14 @@
 #include <stdint.h>
+#include <stdarg.h>
 #include "treap.h"
 #include "stable.h"
+#include "node-i.h"
 #include "tree-i.h"
 
 void
-aff_tt_foreach(const struct AffTree_s *tt,
-               void (*proc)(const struct AffTreeNode_s *node, void *arg),
-	       void *arg)
+aff_tree_foreach(const struct AffTree_s *tt,
+		 void (*proc)(struct AffNode_s *node, void *arg),
+		 void *arg)
 {
     const struct Block_s *b;
     uint32_t i;
@@ -16,7 +18,7 @@ aff_tt_foreach(const struct AffTree_s *tt,
 
     for (b = &tt->block; b; b = b->next) {
 	for (i = 0; i < b->used; i++) {
-	    proc(b->node, arg);
+	    proc((struct AffNode_s *)b->node, arg);
 	}
     }
 }

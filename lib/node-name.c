@@ -1,10 +1,9 @@
 #include <stdint.h>
-#include "treap.h"
-#include "stable.h"
-#include "tree-i.h"
+#include <stdarg.h>
+#include "node-i.h"
 
 const struct AffSymbol_s *
-aff_n_name(const struct AffTreeNode_s *tn)
+aff_node_name(const struct AffNode_s *tn)
 {
     if (tn == 0)
 	return 0;

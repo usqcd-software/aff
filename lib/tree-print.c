@@ -1,16 +1,18 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include "treap.h"
 #include "stable.h"
+#include "node-i.h"
 #include "tree-i.h"
 
 static void
-print_node(const struct AffTreeNode_s *node, void *arg)
+print_node(struct AffNode_s *node, void *arg)
 {
     printf(" %16p %016llx: [%16p %16p %16p %32s] ",
 	   node, node->id,
 	   node->children, node->next,
-	   node->key.parent, aff_sym_name(node->key.name));
+	   node->key.parent, aff_symbol_name(node->key.name));
     switch (node->type) {
     case affNodeInvalid:
 	printf("unvalid node\n");
@@ -37,7 +39,7 @@ print_node(const struct AffTreeNode_s *node, void *arg)
 }
 
 void
-aff_tt_print(const struct AffTree_s *tt)
+aff_tree_print(struct AffTree_s *tt)
 {
     if (tt == 0) {
 	printf("NULL Tree table\n");
@@ -45,6 +47,6 @@ aff_tt_print(const struct AffTree_s *tt)
     }
     printf("Tree table at %p, size=%lld, file-size=%lld:\n",
 	   tt, tt->size, tt->file_size);
-    aff_tt_foreach(tt, print_node, 0);
+    aff_tree_foreach(tt, print_node, 0);
     printf("Tree table end\n");
 }

@@ -23,7 +23,7 @@ aff_stable_insert(struct AffSTable_s *st, const char *name)
 	b = malloc(sizeof (struct Block_s));
 	if (b == 0)
 	    return 0;
-	aff_st_iblock(b, st->size + 1);
+	aff_stable_iblock(b, st->size + 1);
 	st->last_block->next = b;
 	st->last_block = b;
     }
@@ -33,7 +33,7 @@ aff_stable_insert(struct AffSTable_s *st, const char *name)
     if (sym->name == 0)
 	return 0;
     sym->id = st->size + 1;
-    if (aff_treap_extend(st->treap, sym->name, len, sym) != 0) {
+    if (aff_treap_insert(st->treap, sym->name, len, sym) != 0) {
 	free((void *)sym->name);
 	return 0;
     }
