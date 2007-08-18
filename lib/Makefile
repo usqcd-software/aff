@@ -7,7 +7,8 @@ library = liblhpc-aff.a
 sources=$(treap.sources) \
         $(stable.sources) \
         $(tree.sources) \
-        $(node.sources)
+        $(node.sources) \
+        $(md5.sources)
 
 treap.sources = treap-insert.c	\
                 treap-fini.c \
@@ -65,6 +66,10 @@ node.sources = node-foreach.c \
 node.headers = node-i.h \
                node.h
 
+md5.sources = md5.c
+
+md5.headers = md5.h
+
 .PHONY: all clean realclean install
 
 all: $(library)
@@ -90,3 +95,4 @@ $(node.sources:%.c=%.o): $(node.headers)
 $(treap.sources:%.c=%.o): $(treap.headers)
 $(stable.sources:%.c=%.o): $(stable.headers) treap.h
 $(tree.sources:%.c=%.o): $(tree.headers) treap.h stable.h node.h node-i.h
+$(md5.sources:%.c=%.o): $(md5.headers)

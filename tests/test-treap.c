@@ -33,7 +33,7 @@ main(int argc, char *argv[])
 	    printf("lookup(%s)=%s\n", key, ptr);
 	    break;
 	case 2:
-	    status = aff_treap_extend(h, strdup(key), strlen(key) + 1,
+	    status = aff_treap_insert(h, strdup(key), strlen(key) + 1,
 				      strdup(value));
 	    printf("insert(%s, %s) = %d\n", key, value, status);
 	    break;

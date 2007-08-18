@@ -46,7 +46,10 @@ lhpc-aff cmd [args]
 
 Useful prieces:
 
-MD5 checksum routines are in <openssl/md5.h>.
+MD5 checksum routines are in <openssl/md5.h>. -- building it is a mess on BG/L,
+get the reference implementation from RFC 1321.
+
 Treap management routines are written.
 Stable routines are written.
-
+Tree routines are complete.
+Aff interface is written.

@@ -1,6 +1,9 @@
 #ifndef MARK_c7329614_7d7a_4efe_9f6d_87477961bc99
 #define MARK_c7329614_7d7a_4efe_9f6d_87477961bc99
 
+/* AFF imported types */
+struct AffNode_s;
+
 /* AFF objects. Writers.
  *
  * writer() prepares to write an aff file. If it exists the file is deleted
@@ -16,12 +19,16 @@ struct AffWriter_s;
 struct AffWriter_s *aff_writer(const char *file_name);
 int aff_writer_close(struct AffWriter_s *aff);
 const char *aff_writer_errstr(struct AffWriter_s *aff);
-struct AffSTable_s *aff_stable(struct AffWriter_s *aff);
-struct AffNode_t *aff_writer_root(struct AffWriter_s *aff);
+struct AffSTable_s *aff_writer_stable(struct AffWriter_s *aff);
+struct AffTree_s *aff_writer_tree(struct AffWriter_s *aff);
+struct AffNode_s *aff_writer_root(struct AffWriter_s *aff);
 void aff_writer_foreach(struct AffWriter_s *aff,
 			void (*proc)(struct AffNode_s *node,
 				     void *arg),
 			void *arg);
+struct AffNode_s *aff_writer_mkdir(struct AffWriter_s *aff,
+				   struct AffNode_s *dir,
+				   const char *name);
 int aff_node_put_char(struct AffWriter_s *aff,
 		      struct AffNode_s *n,
 		      const char *d,
@@ -49,17 +56,20 @@ int aff_node_put_complex(struct AffWriter_s *aff,
  *         ignore tail.
  */
 struct AffReader_s;
-struct AffReaderNode_s;
 
 struct AffReader_s *aff_reader(const char *file_name);
 int aff_close_reader(struct AffReader_s *aff);
 const char *aff_reader_errstr(struct AffReader_s *aff);
+struct AffTree_s *aff_reader_tree(struct AffReader_s *aff);
 struct AffSTable_s *aff_reader_stable(const struct AffReader_s *aff);
-struct AffNode_t *aff_reader_root(struct AffReader_s *aff);
+struct AffNode_s *aff_reader_root(struct AffReader_s *aff);
 void aff_reader_foreach(struct AffReader_s *aff,
 			void (*proc)(struct AffNode_s *node,
 				     void *arg),
 			void *arg);
+struct AffNode_s *aff_reader_chdir(struct AffReader_s *aff,
+				   struct AffNode_s *dir,
+				   const char *name);
 int aff_node_get_char(const struct AffReader_s *aff,
 		      const struct AffNode_s *n,
 		      char *d,
