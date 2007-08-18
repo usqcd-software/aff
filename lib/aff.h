@@ -8,16 +8,20 @@ struct AffNode_s;
  *
  * writer() prepares to write an aff file. If it exists the file is deleted
  *          before opening.
- * writer_close() commits the data to the disk and closes the file. It returns 0
+ * close() commits the data to the disk and closes the file. It returns 0
  *          if no error occured, an a non-zero error status otherwise.
- * writer_errstr() returns the first error recorded in the object.
+ * errstr() returns the first error recorded in the object.
  * put_*() write data to the file and set node's type. A put could be called
  *          at most once on a node.
+ * close() returns the last status of the writer. NULL means all the data was
+ *          written to the file without errors, otherwise an error destription
+ *          is returned. The error string is static and should *NOT* be freed().
  */
+
 struct AffWriter_s;
 
 struct AffWriter_s *aff_writer(const char *file_name);
-int aff_writer_close(struct AffWriter_s *aff);
+const char *aff_writer_close(struct AffWriter_s *aff);
 const char *aff_writer_errstr(struct AffWriter_s *aff);
 struct AffSTable_s *aff_writer_stable(struct AffWriter_s *aff);
 struct AffTree_s *aff_writer_tree(struct AffWriter_s *aff);

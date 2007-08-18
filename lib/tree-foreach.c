@@ -18,7 +18,7 @@ aff_tree_foreach(const struct AffTree_s *tt,
 
     for (b = &tt->block; b; b = b->next) {
 	for (i = 0; i < b->used; i++) {
-	    proc((struct AffNode_s *)b->node, arg);
+	    proc((struct AffNode_s *)&b->node[i], arg);
 	}
     }
 }

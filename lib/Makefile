@@ -8,7 +8,9 @@ sources=$(treap.sources) \
         $(stable.sources) \
         $(tree.sources) \
         $(node.sources) \
-        $(md5.sources)
+        $(md5.sources) \
+        $(coding.sources) \
+        $(aff.sources)
 
 treap.sources = treap-insert.c	\
                 treap-fini.c \
@@ -70,6 +72,22 @@ md5.sources = md5.c
 
 md5.headers = md5.h
 
+aff.sources = waff-init.c \
+              waff-fini.c \
+              waff-errstr.c \
+              waff-root.c \
+              waff-mkdir.c \
+              waff-putchar.c
+
+aff.headers = aff-i.h \
+              aff.h
+
+coding.sources = encode-type.c \
+                 encode-u32.c \
+                 encode-u64.c
+
+coding.headers = coding.h
+
 .PHONY: all clean realclean install
 
 all: $(library)
@@ -96,3 +114,5 @@ $(treap.sources:%.c=%.o): $(treap.headers)
 $(stable.sources:%.c=%.o): $(stable.headers) treap.h
 $(tree.sources:%.c=%.o): $(tree.headers) treap.h stable.h node.h node-i.h
 $(md5.sources:%.c=%.o): $(md5.headers)
+$(aff.sources:%.c=%.o): $(aff.headers) md5.h tree.h stable.h coding.h
+$(coding.sources:%.c=%.o): $(coding.headers) node.h

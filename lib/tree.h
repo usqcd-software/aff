@@ -1,6 +1,10 @@
 #ifndef MARK_c57377cb_879b_4716_a827_b5a4428d7fbc
 #define MARK_c57377cb_879b_4716_a827_b5a4428d7fbc
 
+/* Tree external types */
+struct AffNode_s;
+struct AffSymbol_s;
+
 /* Tree table implementation.
  *
  * foreach() passes elements of the table in order of ids, root is not returned.

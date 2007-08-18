@@ -23,11 +23,13 @@ static int
 do_document(struct AffWriter_s *writer,
 	    struct AffNode_s *a_node,
 	    xmlDocPtr doc,
-	    xmlNodePtr x_node)
+	    xmlNodePtr x_node,
+	    int level)
 {
     const xmlChar *x_name = x_node->name;
 
-    if (xmlStrcmp(x_name, (const xmlChar *)"text") != 0) {
+/*    printf(": %4d %s\n", level, x_name); */
+    if (xmlStrcmp(x_name, (const xmlChar *)"text") == 0) {
 	xmlChar *data = xmlNodeListGetString(doc, x_node, 1);
 	const char *v;
 	if (data == 0) {
@@ -38,7 +40,8 @@ do_document(struct AffWriter_s *writer,
 	if (*v != 0) {
 	    if (aff_node_put_char(writer, a_node, v, strlen(v))) {
 		xmlFree(data);
-		fprintf(stderr, "*** aff error: %s\n",
+		fprintf(stderr, "*** [%s] aff error: %s\n",
+			x_name,
 			aff_writer_errstr(writer));
 		return 1;
 	    }
@@ -48,11 +51,13 @@ do_document(struct AffWriter_s *writer,
 	/* not a text element */
 	a_node = aff_writer_mkdir(writer, a_node, (const char *)x_name);
 	if (a_node == 0) {
-	    fprintf(stderr, "*** aff error: %s\n", aff_writer_errstr(writer));
+	    fprintf(stderr, "*** [%s] aff error: %s\n",
+		    x_name,
+		    aff_writer_errstr(writer));
 	    return 1;
 	}
 	for (x_node = x_node->xmlChildrenNode; x_node; x_node = x_node->next) {
-	    if (do_document(writer, a_node, doc, x_node))
+	    if (do_document(writer, a_node, doc, x_node, level + 1))
 		return 1;
 	}
     }
@@ -68,6 +73,7 @@ process_xml(const char *out_name,
     const char *doc_name = basename(in_name);
     xmlDocPtr doc = xmlParseFile(in_name);
     xmlNodePtr node;
+    const char *msg;
     int status = 1;
 
     if (doc == 0) {
@@ -82,12 +88,18 @@ process_xml(const char *out_name,
     }
 
     root = aff_writer_mkdir(wr, aff_writer_root(wr), doc_name);
-    do_document(wr, root, doc, node);
+    status |= do_document(wr, root, doc, node, 0);
     
+    msg = aff_writer_close(wr);
+    if (msg) {
+	printf("Error in test-waff(): %s\n", msg);
+	status = 1;
+    } else {
+	printf("test-waff() done\n");
+	status = 0;
+    }
 end:
     xmlFreeDoc(doc);
-    aff_writer_close(wr);
-    printf("test-waff status is %d\n", status);
     return status;
 }
 
