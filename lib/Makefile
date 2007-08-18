@@ -57,8 +57,8 @@ node.sources = node-foreach.c \
                node-size.c \
                node-offset.c \
                node-assign.c \
+               node-chdir.c \
                node-cda.c \
-               node-cdp.c \
                node-cdv.c \
                node-cd.c
 
