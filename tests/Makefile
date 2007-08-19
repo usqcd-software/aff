@@ -8,7 +8,8 @@ LIBS      = -L../lib -llhpc-aff $(XMLLIBS)
 tests = test-stable.c \
         test-treap.c \
         test-md5.c \
-        test-waff.c
+        test-waff.c \
+        write-aff.c
 
 .PHONY: all clean realclean
 
@@ -23,3 +24,5 @@ realclean: clean
 $(tests:%.c=%): %: %.c
 	make -C ../lib
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
+
+$(tests:%.c=%): ../lib/liblhpc-aff.a

@@ -76,15 +76,25 @@ aff.sources = waff-init.c \
               waff-fini.c \
               waff-errstr.c \
               waff-root.c \
+              waff-stable.c \
+              waff-tree.c \
               waff-mkdir.c \
-              waff-putchar.c
+              waff-putchar.c \
+              waff-putint.c \
+              waff-putdouble.c \
+              waff-putcomplex.c
 
 aff.headers = aff-i.h \
               aff.h
 
 coding.sources = encode-type.c \
                  encode-u32.c \
-                 encode-u64.c
+                 encode-u64.c \
+                 encode-double.c \
+                 decode-type.c \
+                 decode-u32.c \
+                 decode-u64.c
+
 
 coding.headers = coding.h
 

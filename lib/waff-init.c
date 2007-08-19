@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <float.h>
 #include "md5.h"
 #include "tree.h"
 #include "stable.h"
@@ -15,7 +16,7 @@ aff_writer(const char *file_name)
 
     if (w == 0)
 	return 0;
-    
+
     memset(w, 0, sizeof (struct AffWriter_s));
     w->stable = aff_stable_init();
     if (w->stable == 0)
@@ -33,12 +34,16 @@ aff_writer(const char *file_name)
     if (fwrite(dummy_header, AFF_HEADER_SIZE, 1, w->file) != 1)
 	goto no_hdr;
     
+    if (FLT_RADIX != 2 || sizeof(double) > sizeof (uint64_t))
+	goto bad_radix;
+
     w->position = AFF_HEADER_SIZE;
     aff_md5_init(&w->data_hdr.md5);
     w->data_hdr.size = 0;
     w->data_hdr.start = AFF_HEADER_SIZE;
 
     return w;
+bad_radix:
 no_hdr:
     fclose(w->file);
     remove(file_name);
@@ -47,5 +52,6 @@ no_file:
 no_tree:
     free(w->stable);
 no_stable:
+    free(w);
     return 0;
 }

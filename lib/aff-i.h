@@ -3,7 +3,7 @@
 #include "aff.h"
 
 enum {
-    AFF_HEADER_SIZE = 39 /* the full header size */
+    AFF_HEADER_SIZE = 144 /* the full header size */
 };
 
 #define AFF_SIG       "LHPC AFF version 1.0"

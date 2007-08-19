@@ -26,10 +26,6 @@ const char *aff_writer_errstr(struct AffWriter_s *aff);
 struct AffSTable_s *aff_writer_stable(struct AffWriter_s *aff);
 struct AffTree_s *aff_writer_tree(struct AffWriter_s *aff);
 struct AffNode_s *aff_writer_root(struct AffWriter_s *aff);
-void aff_writer_foreach(struct AffWriter_s *aff,
-			void (*proc)(struct AffNode_s *node,
-				     void *arg),
-			void *arg);
 struct AffNode_s *aff_writer_mkdir(struct AffWriter_s *aff,
 				   struct AffNode_s *dir,
 				   const char *name);
@@ -39,7 +35,7 @@ int aff_node_put_char(struct AffWriter_s *aff,
 		      uint32_t s);
 int aff_node_put_int(struct AffWriter_s *aff,
 		     struct AffNode_s *n,
-		     const int32_t *d,
+		     const uint32_t *d,
 		     uint32_t s);
 int aff_node_put_double(struct AffWriter_s *aff,
 			struct AffNode_s *n,
@@ -62,15 +58,11 @@ int aff_node_put_complex(struct AffWriter_s *aff,
 struct AffReader_s;
 
 struct AffReader_s *aff_reader(const char *file_name);
-int aff_close_reader(struct AffReader_s *aff);
+int aff_reader_close(struct AffReader_s *aff);
 const char *aff_reader_errstr(struct AffReader_s *aff);
 struct AffTree_s *aff_reader_tree(struct AffReader_s *aff);
 struct AffSTable_s *aff_reader_stable(const struct AffReader_s *aff);
 struct AffNode_s *aff_reader_root(struct AffReader_s *aff);
-void aff_reader_foreach(struct AffReader_s *aff,
-			void (*proc)(struct AffNode_s *node,
-				     void *arg),
-			void *arg);
 struct AffNode_s *aff_reader_chdir(struct AffReader_s *aff,
 				   struct AffNode_s *dir,
 				   const char *name);

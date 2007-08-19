@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <float.h>
+#include <limits.h>
 #include "md5.h"
 #include "node.h"
 #include "tree.h"
@@ -17,13 +18,15 @@ out_string(const struct AffSymbol_s *symbol, void *arg)
 
     if (aff->error == 0) {
 	const char *name = aff_symbol_name(symbol);
-	int len = strlen(name) + 1;
+	int size = strlen(name) + 1;
 
-	if (fwrite(name, len, 1, aff->file) != 1) {
+	if (fwrite(name, size, 1, aff->file) != 1) {
 	    aff->error = "Symbol writing error";
 	    return;
 	}
-	aff_md5_update(&aff->stable_hdr.md5, (const uint8_t *)name, len);
+	aff_md5_update(&aff->stable_hdr.md5, (const uint8_t *)name, size);
+	aff->stable_hdr.size += size;
+	aff->position += size;
     }
 }
 
@@ -61,6 +64,8 @@ out_node(struct AffNode_s *node, void *arg)
 	    return;
 	}
 	aff_md5_update(&aff->tree_hdr.md5, block, size);
+	aff->tree_hdr.size += size;
+	aff->position += size;
     }
 }
 
@@ -91,6 +96,7 @@ pack(struct AffWriter_s *aff, struct Section_s *section, char *error_msg)
 	return;
     }
     aff_md5_update(&aff->header_md5, block, size);
+    aff->header_size += size;
 }
 
 
@@ -98,7 +104,9 @@ const char *
 aff_writer_close(struct AffWriter_s *aff)
 {
     const char *sig = AFF_SIG;
-    uint8_t buffer[16];
+    uint8_t buffer[AFF_HEADER_SIZE];
+    uint8_t *ptr;
+    uint32_t size;
 
     if (aff == 0)
 	return "NULL aff passed to aff_writer_close()";
@@ -130,14 +138,23 @@ aff_writer_close(struct AffWriter_s *aff)
     }
     aff_md5_update(&aff->header_md5, (const uint8_t *)sig, aff->header_size);
 
-    buffer[0] = sizeof (double);
-    buffer[1] = DBL_MANT_DIG;
-    aff->header_size += 2;
-    if (fwrite(buffer, 2, 1, aff->file) != 1) {
+    buffer[0] = sizeof (double) * CHAR_BIT;
+    buffer[1] = FLT_RADIX;
+    buffer[2] = DBL_MANT_DIG;
+    ptr = aff_encode_u32(buffer + 3, sizeof (buffer) - 3,
+			 (DBL_MAX_EXP << 16) | (- DBL_MIN_EXP));
+    ptr = aff_encode_u32(ptr, sizeof(buffer) - (ptr - buffer), AFF_HEADER_SIZE);
+    if (ptr == 0) {
+	aff->error = "Can't encode DBL_MIN_EXP";
+	goto end;
+    }
+    size = ptr - buffer;
+    aff->header_size += size;
+    if (fwrite(buffer, size, 1, aff->file) != 1) {
 	aff->error = "AFF size signature writing error";
 	goto end;
     }
-    aff_md5_update(&aff->header_md5, buffer, 2);
+    aff_md5_update(&aff->header_md5, buffer, size);
 
     pack(aff, &aff->stable_hdr, "Stable header writing error");
     pack(aff, &aff->tree_hdr, "Tree header writing error");
