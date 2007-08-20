@@ -48,20 +48,23 @@ int aff_node_put_complex(struct AffWriter_s *aff,
 
 /* AFF objects. Readers.
  *
- * reader() loaded the index from the file.
- * close_reader() closes the file and frees all data associated with the reader.
- * reader_errstr() returns the first error recorded in the object.
- * foreach() traverses all nodes in the tree.
+ * reader() loaded the indices from the file and keeps the file open for data
+ *          access.
+ * close() closes the file and frees all data associated with the reader.
+ * check() computes the check sum on the data and returns 0 if everthing is
+ *         is fine. Otherwise, an error message is set in the reader.
+ * errstr() returns the first error recorded in the object.
  * get_*() are accessors to the data, partial reads return the head, long reads
  *         ignore tail.
  */
 struct AffReader_s;
 
 struct AffReader_s *aff_reader(const char *file_name);
-int aff_reader_close(struct AffReader_s *aff);
+void aff_reader_close(struct AffReader_s *aff);
 const char *aff_reader_errstr(struct AffReader_s *aff);
 struct AffTree_s *aff_reader_tree(struct AffReader_s *aff);
 struct AffSTable_s *aff_reader_stable(const struct AffReader_s *aff);
+int aff_reader_check(struct AffReader_s *aff);
 struct AffNode_s *aff_reader_root(struct AffReader_s *aff);
 struct AffNode_s *aff_reader_chdir(struct AffReader_s *aff,
 				   struct AffNode_s *dir,

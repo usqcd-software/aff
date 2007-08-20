@@ -70,7 +70,7 @@ out_node(struct AffNode_s *node, void *arg)
 }
 
 static void
-pack(struct AffWriter_s *aff, struct Section_s *section, char *error_msg)
+pack(struct AffWriter_s *aff, struct WSection_s *section, char *error_msg)
 {
     uint8_t block[8+8+16];
     uint8_t *buf;
@@ -156,9 +156,9 @@ aff_writer_close(struct AffWriter_s *aff)
     }
     aff_md5_update(&aff->header_md5, buffer, size);
 
+    pack(aff, &aff->data_hdr, "Data header writing error");
     pack(aff, &aff->stable_hdr, "Stable header writing error");
     pack(aff, &aff->tree_hdr, "Tree header writing error");
-    pack(aff, &aff->data_hdr, "Data header writing error");
     if (aff->error)
 	goto end;
     
