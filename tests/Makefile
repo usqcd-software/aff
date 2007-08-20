@@ -9,6 +9,7 @@ tests = test-stable.c \
         test-treap.c \
         test-md5.c \
         test-waff.c \
+        test-double.c \
         write-aff.c
 
 .PHONY: all clean realclean

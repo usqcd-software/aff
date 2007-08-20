@@ -33,12 +33,10 @@ struct AffWriter_s {
 struct RSection_s {
     uint64_t         start;
     uint64_t         size;
-    struct AffMD5_s  md5;
-    uint8_t          f_md5[16];
+    uint8_t          md5[16];
 };
 
 struct AffReader_s {
-    struct AffMD5_s      header_md5;
     int                  header_size;
     int                  fatal_error_p;
     const char          *error;
@@ -54,5 +52,6 @@ struct AffReader_s {
     struct RSection_s    data_hdr;
 };
 
+extern uint8_t aff_signature[];
 
 #endif /* !defined(MARK_6f9650e1_45e8_4695_81a9_8c3672baee90) */

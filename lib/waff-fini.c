@@ -103,7 +103,6 @@ pack(struct AffWriter_s *aff, struct WSection_s *section, char *error_msg)
 const char *
 aff_writer_close(struct AffWriter_s *aff)
 {
-    const char *sig = AFF_SIG;
     uint8_t buffer[AFF_HEADER_SIZE];
     uint8_t *ptr;
     uint32_t size;
@@ -131,12 +130,12 @@ aff_writer_close(struct AffWriter_s *aff)
     rewind(aff->file);
 
     aff_md5_init(&aff->header_md5);
-    aff->header_size = strlen(sig) + 1;
-    if (fwrite(sig, aff->header_size, 1, aff->file) != 1) {
+    aff->header_size = strlen((const char *)aff_signature) + 1;
+    if (fwrite(aff_signature, aff->header_size, 1, aff->file) != 1) {
 	aff->error = "AFF Signature writing erorr";
 	goto end;
     }
-    aff_md5_update(&aff->header_md5, (const uint8_t *)sig, aff->header_size);
+    aff_md5_update(&aff->header_md5, aff_signature, aff->header_size);
 
     buffer[0] = sizeof (double) * CHAR_BIT;
     buffer[1] = FLT_RADIX;

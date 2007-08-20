@@ -10,7 +10,8 @@ sources=$(treap.sources) \
         $(node.sources) \
         $(md5.sources) \
         $(coding.sources) \
-        $(aff.sources)
+        $(aff.sources) \
+        $(io.sources)
 
 treap.sources = treap-insert.c	\
                 treap-fini.c \
@@ -72,7 +73,8 @@ md5.sources = md5.c
 
 md5.headers = md5.h
 
-aff.sources = waff-init.c \
+aff.sources = aff-signature.c \
+              waff-init.c \
               waff-fini.c \
               waff-errstr.c \
               waff-root.c \
@@ -82,7 +84,19 @@ aff.sources = waff-init.c \
               waff-putchar.c \
               waff-putint.c \
               waff-putdouble.c \
-              waff-putcomplex.c
+              waff-putcomplex.c \
+              raff-init.c \
+              raff-fini.c \
+              raff-check.c \
+              raff-errstr.c \
+              raff-root.c \
+              raff-stable.c \
+              raff-tree.c \
+              raff-chdir.c \
+              raff-getchar.c \
+              raff-getint.c \
+              raff-getdouble.c \
+              raff-getcomplex.c \
 
 aff.headers = aff-i.h \
               aff.h
@@ -93,10 +107,14 @@ coding.sources = encode-type.c \
                  encode-double.c \
                  decode-type.c \
                  decode-u32.c \
-                 decode-u64.c
-
+                 decode-u64.c \
+                 decode-double.c
 
 coding.headers = coding.h
+
+io.sources = io.c
+
+io.headers = io.h
 
 .PHONY: all clean realclean install
 
@@ -124,5 +142,6 @@ $(treap.sources:%.c=%.o): $(treap.headers)
 $(stable.sources:%.c=%.o): $(stable.headers) treap.h
 $(tree.sources:%.c=%.o): $(tree.headers) treap.h stable.h node.h node-i.h
 $(md5.sources:%.c=%.o): $(md5.headers)
-$(aff.sources:%.c=%.o): $(aff.headers) md5.h tree.h stable.h coding.h
+$(aff.sources:%.c=%.o): $(aff.headers) md5.h tree.h stable.h coding.h io.h
 $(coding.sources:%.c=%.o): $(coding.headers) node.h
+$io.sources:%.c=%.o): $(io.headers)

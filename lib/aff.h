@@ -63,28 +63,27 @@ struct AffReader_s *aff_reader(const char *file_name);
 void aff_reader_close(struct AffReader_s *aff);
 const char *aff_reader_errstr(struct AffReader_s *aff);
 struct AffTree_s *aff_reader_tree(struct AffReader_s *aff);
-struct AffSTable_s *aff_reader_stable(const struct AffReader_s *aff);
+struct AffSTable_s *aff_reader_stable(struct AffReader_s *aff);
 int aff_reader_check(struct AffReader_s *aff);
 struct AffNode_s *aff_reader_root(struct AffReader_s *aff);
 struct AffNode_s *aff_reader_chdir(struct AffReader_s *aff,
 				   struct AffNode_s *dir,
 				   const char *name);
-int aff_node_get_char(const struct AffReader_s *aff,
-		      const struct AffNode_s *n,
+int aff_node_get_char(struct AffReader_s *aff,
+		      struct AffNode_s *n,
 		      char *d,
 		      uint32_t s);
-int aff_node_get_int(const struct AffReader_s *aff,
-		     const struct AffNode_s *n,
-		     int32_t *d,
+int aff_node_get_int(struct AffReader_s *aff,
+		     struct AffNode_s *n,
+		     uint32_t *d,
 		     uint32_t s);
-int aff_node_get_double(const struct AffReader_s *aff,
-			const struct AffNode_s *n,
+int aff_node_get_double(struct AffReader_s *aff,
+			struct AffNode_s *n,
 			double *d,
 			uint32_t s);
-int aff_node_get_complex(const struct AffReader_s *aff,
-			 const struct AffNode_s *n,
+int aff_node_get_complex(struct AffReader_s *aff,
+			 struct AffNode_s *n,
 			 double _Complex *d,
 			 uint32_t s);
-
 
 #endif /* !defined(MARK_c7329614_7d7a_4efe_9f6d_87477961bc99) */
