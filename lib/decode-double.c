@@ -3,6 +3,7 @@
 #include <float.h>
 #include <limits.h>
 #include <math.h>
+#include <stdarg.h>
 #include "node.h"
 #include "coding.h"
 

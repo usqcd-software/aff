@@ -7,7 +7,7 @@
 #include "tree-i.h"
 
 struct AffTree_s *
-aff_tree_init(void)
+aff_tree_init(struct AffSTable_s *stable)
 {
     struct AffTree_s *tt = malloc(sizeof (struct AffTree_s));
 
@@ -24,7 +24,7 @@ aff_tree_init(void)
     tt->last_block = &tt->block;
     tt->root.type = affNodeVoid;
     tt->root.key.parent = &tt->root;
-    tt->root.key.name = 0;
+    tt->root.key.name = aff_stable_insert(stable, "");
     tt->root.id = 0;
     tt->root.size = 0;
     tt->root.offset = 0;

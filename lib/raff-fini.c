@@ -2,8 +2,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "tree.h"
 #include "stable.h"
+#include "tree.h"
 #include "md5.h"
 #include "aff-i.h"
 

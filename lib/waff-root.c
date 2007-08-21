@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
+#include "stable.h"
 #include "tree.h"
 #include "md5.h"
 #include "aff-i.h"

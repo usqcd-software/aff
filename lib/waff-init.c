@@ -4,8 +4,8 @@
 #include <string.h>
 #include <float.h>
 #include "md5.h"
-#include "tree.h"
 #include "stable.h"
+#include "tree.h"
 #include "aff-i.h"
 
 struct AffWriter_s *
@@ -21,7 +21,7 @@ aff_writer(const char *file_name)
     w->stable = aff_stable_init();
     if (w->stable == 0)
 	goto no_stable;
-    w->tree = aff_tree_init();
+    w->tree = aff_tree_init(w->stable);
     if (w->tree == 0)
 	goto no_tree;
 

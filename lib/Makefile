@@ -1,5 +1,5 @@
 # This is a temporary makefile. It should be replaced when configure is set up.
-CC = gcc
+CC = gcc -std=c99 -DHAS_INTEGRAL_OFF_T
 CFLAGS = -g -Wall
 prefix = .
 library = liblhpc-aff.a
@@ -13,7 +13,8 @@ sources=$(treap.sources) \
         $(aff.sources) \
         $(io.sources)
 
-treap.sources = treap-insert.c	\
+treap.sources = treap-cmp.c \
+                treap-insert.c	\
                 treap-fini.c \
 	        treap-init.c \
                 treap-lookup.c \

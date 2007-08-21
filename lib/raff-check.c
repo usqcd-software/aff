@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include "node.h"
 #include "md5.h"
 #include "io.h"

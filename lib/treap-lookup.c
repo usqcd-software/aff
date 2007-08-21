@@ -3,7 +3,7 @@
 #include "treap-i.h"
 
 void *
-aff_treap_lookup(const struct AffTreap_s *h, const void *key, int ksize)
+aff_treap_lookup(const struct AffTreap_s *h, const void *key, int size)
 {
     struct Node_s *n;
 
@@ -11,7 +11,7 @@ aff_treap_lookup(const struct AffTreap_s *h, const void *key, int ksize)
 	return 0;
 
     for (n = h->root; n;) {
-	int cmp = memcmp(key, n->key, ksize);
+	int cmp = aff_treap_cmp(key, size, n->key, n->key_size);
 
 	if (cmp == 0) {
 	    return n->value;

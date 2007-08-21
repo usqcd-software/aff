@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <stdarg.h>
 #include "node.h"
 #include "md5.h"
 #include "coding.h"

@@ -30,7 +30,7 @@ aff_tree_insert(struct AffTree_s         *tt,
 	b = malloc(sizeof (struct Block_s));
 	if (b == 0)
 	    return 0;
-	aff_tree_iblock(b, tt->size + 1);
+	aff_tree_iblock(b, tt->size);
 	tt->last_block->next = b;
 	tt->last_block = b;
     }
@@ -40,14 +40,14 @@ aff_tree_insert(struct AffTree_s         *tt,
     n->type = affNodeVoid;
     n->size = 0;
     n->offset = 0;
-    n->id = tt->size + 1;
+    n->id = tt->size;
     n->next = parent->children;
     ((struct AffNode_s *)parent)->children = n;
     if (aff_treap_insert(tt->treap, &n->key, sizeof (struct Key_s), n) != 0) {
 	return 0;
     }
     b->used++;
-    tt->size = n->id;
+    tt->size++;
     tt->file_size += len
 	+ sizeof (uint8_t)  /* type */
 	+ sizeof (uint32_t) /* nameId */

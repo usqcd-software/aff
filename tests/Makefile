@@ -10,9 +10,10 @@ tests = test-stable.c \
         test-md5.c \
         test-waff.c \
         test-double.c \
-        write-aff.c
+        write-aff.c \
+        read-aff.c
 
-.PHONY: all clean realclean
+.PHONY: all clean realclean lib
 
 all: $(tests:%.c=%)
 
@@ -23,7 +24,9 @@ realclean: clean
 	$(RM) $(tests:%.c=%)
 
 $(tests:%.c=%): %: %.c
-	make -C ../lib
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
-$(tests:%.c=%): ../lib/liblhpc-aff.a
+$(tests:%.c=%): lib
+
+lib:
+	make -C ../lib

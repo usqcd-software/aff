@@ -4,6 +4,8 @@
 #include <string.h>
 #include <float.h>
 #include <limits.h>
+#include <stdarg.h>
+#include "io.h"
 #include "md5.h"
 #include "node.h"
 #include "tree.h"
@@ -127,7 +129,10 @@ aff_writer_close(struct AffWriter_s *aff)
     if (aff->error)
 	goto end;
 
-    rewind(aff->file);
+    if (aff_file_setpos(aff->file, 0) != 0) {
+	aff->error = "AFF positioning error";
+	goto end;
+    }
 
     aff_md5_init(&aff->header_md5);
     aff->header_size = strlen((const char *)aff_signature) + 1;

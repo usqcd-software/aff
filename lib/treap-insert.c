@@ -17,7 +17,7 @@ aff_treap_insert(struct AffTreap_s *h, const void *key, int size, void *data)
 	return 1;
     
     for (p = h->root; p;) {
-	int cmp = memcmp(key, p->key, size);
+	int cmp = aff_treap_cmp(key, size, p->key, p->key_size);
 	if (cmp == 0) {
 	    return 2;
 	} else if (cmp < 0) {
@@ -35,7 +35,7 @@ aff_treap_insert(struct AffTreap_s *h, const void *key, int size, void *data)
     q->value = data;
     q->left = q->right = 0;
     for (p = h->root, w = &h->root; p && p->hash <= x; p = *w) {
-	int cmp = memcmp(key, p->key, size);
+	int cmp = aff_treap_cmp(key, size, p->key, p->key_size);
 	if (cmp < 0) {
 	    w = &p->left;
 	} else {
@@ -46,7 +46,7 @@ aff_treap_insert(struct AffTreap_s *h, const void *key, int size, void *data)
     l = &q->left;
     r = &q->right;
     while (p) {
-	int cmp = memcmp(key, p->key, size);
+	int cmp = aff_treap_cmp(key, size, p->key, p->key_size);
 	if (cmp < 0) {
 	    *r = p;
 	    r = &p->left;

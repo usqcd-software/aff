@@ -16,8 +16,9 @@ struct AffSymbol_s;
  * lookup() returns NULL if the node does not exist.
  */
 struct AffTree_s;
+struct AffSTable_s;
 
-struct AffTree_s *aff_tree_init(void);
+struct AffTree_s *aff_tree_init(struct AffSTable_s *);
 void *aff_tree_fini(struct AffTree_s *tree);
 void aff_tree_foreach(const struct AffTree_s *tree,
 		      void (*proc)(struct AffNode_s *node, void *arg),

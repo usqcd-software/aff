@@ -14,11 +14,11 @@ aff_tree_index(const struct AffTree_s *tt, uint64_t index)
 
     if (tt == 0)
 	return 0;
+    if (index == 0)
+	return (struct AffNode_s *)&tt->root;
     for (b = &tt->block; b; b = b->next) {
-	if (index < b->start)
-	    return 0;
 	if (index < b->start + b->used)
-	    return (struct AffNode_s *)&b->node[b->start - index];
+	    return (struct AffNode_s *)&b->node[index - b->start];
     }
     return 0;
 }

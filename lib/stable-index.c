@@ -9,10 +9,8 @@ aff_stable_index(const struct AffSTable_s *st, uint32_t index)
     if (st == 0)
 	return 0;
     for (b = &st->block; b; b = b->next) {
-	if (index < b->start)
-	    return 0;
 	if (index < b->start + b->used)
-	    return &b->symbol[b->start - index];
+	    return &b->symbol[index - b->start];
     }
     return 0;
 }
