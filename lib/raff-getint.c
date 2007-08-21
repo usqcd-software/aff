@@ -20,17 +20,26 @@ aff_node_get_int(struct AffReader_s *aff,
     uint32_t size;
     uint64_t offset;
 
-    if (aff == 0)
+    if (aff == 0 || aff->error)
 	return 1;
-    if (aff->error != 0)
+    if (aff->file == 0) {
+	aff->error = "NULL file in aff_get_node_int()";
 	return 1;
-    if (aff->file == 0 || n == 0 || d == 0 || s == 0) {
-	aff->error = "Unreasonable parameters to aff_node_get_int()";
+    }
+    if (n == 0) {
+	aff->error = "NULL node in aff_get_node_int()";
+	return 1;
+    }
+    if (d == 0) {
+	aff->error = "NULL data in aff_get_node_int()";
 	return 1;
     }
     if (aff_node_type(n) != affNodeInt) {
 	aff->error = "Reading a int32_t[] from wrong node";
 	return 1;
+    }
+    if (s == 0) {
+	return 0;
     }
     size = aff_node_size(n);
     offset = aff_node_offset(n);

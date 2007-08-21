@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <float.h>
+#include <errno.h>
 #include "md5.h"
 #include "stable.h"
 #include "tree.h"
@@ -12,46 +13,59 @@ struct AffWriter_s *
 aff_writer(const char *file_name)
 {
     uint8_t dummy_header[AFF_HEADER_SIZE];
-    struct AffWriter_s *w = malloc(sizeof (struct AffWriter_s));
+    struct AffWriter_s *aff = malloc(sizeof (struct AffWriter_s));
 
-    if (w == 0)
+    if (aff == 0)
 	return 0;
 
-    memset(w, 0, sizeof (struct AffWriter_s));
-    w->stable = aff_stable_init();
-    if (w->stable == 0)
-	goto no_stable;
-    w->tree = aff_tree_init(w->stable);
-    if (w->tree == 0)
-	goto no_tree;
-
+    memset(aff, 0, sizeof (struct AffWriter_s));
     remove(file_name);
-    w->file = fopen(file_name, "wb");
-    if (w->file == 0)
-	goto no_file;
-    
+    aff->file = fopen(file_name, "wb");
+    if (aff->file == 0) {
+	aff->error = strerror(errno);
+	return aff;
+    }
+
+    aff->stable = aff_stable_init();
+    if (aff->stable == 0) {
+	aff->error = "Not enough memory for stable in aff_writer()";
+	goto error;
+    }
+
+    aff->tree = aff_tree_init(aff->stable);
+    if (aff->tree == 0) {
+	aff->error = "Not enough memory for tree in aff_writer()";
+	goto error;
+    }
+
     memset(dummy_header, 0, AFF_HEADER_SIZE);
-    if (fwrite(dummy_header, AFF_HEADER_SIZE, 1, w->file) != 1)
-	goto no_hdr;
+    if (fwrite(dummy_header, AFF_HEADER_SIZE, 1, aff->file) != 1) {
+	aff->error = "Error writing dummy header in aff_writer()";
+	goto error;
+    }
     
-    if (FLT_RADIX != 2 || sizeof(double) > sizeof (uint64_t))
-	goto bad_radix;
+    if (FLT_RADIX != 2 || sizeof(double) > sizeof (uint64_t)) {
+	aff->error = "Unsupported double format in aff_writer()";
+	goto error;
+    }
 
-    w->position = AFF_HEADER_SIZE;
-    aff_md5_init(&w->data_hdr.md5);
-    w->data_hdr.size = 0;
-    w->data_hdr.start = AFF_HEADER_SIZE;
+    aff->position = AFF_HEADER_SIZE;
+    aff_md5_init(&aff->data_hdr.md5);
+    aff->data_hdr.size = 0;
+    aff->data_hdr.start = AFF_HEADER_SIZE;
 
-    return w;
-bad_radix:
-no_hdr:
-    fclose(w->file);
-    remove(file_name);
-no_file:
-    free(w->tree);
-no_tree:
-    free(w->stable);
-no_stable:
-    free(w);
-    return 0;
+    return aff;
+
+error:
+    if (aff->file)
+	fclose(aff->file);
+    aff->file = 0;
+    if (aff->tree)
+	aff_tree_fini(aff->tree);
+    aff->tree = 0;
+    if (aff->stable)
+	aff_stable_fini(aff->stable);
+    aff->stable = 0;
+
+    return aff;
 }

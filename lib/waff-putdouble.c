@@ -17,9 +17,16 @@ aff_node_put_double(struct AffWriter_s *aff,
     uint32_t i;
     uint8_t buf[sizeof (double)];
 
-    if (aff == 0 || n == 0 || d == 0 || aff->error != 0)
+    if (aff == 0 || aff->error)
 	return 1;
-
+    if (n == 0) {
+	aff->error = "NULL node in aff_node_put_double()";
+	return 1;
+    }
+    if (d == 0) {
+	aff->error = "NULL data in aff_node_put_double()";
+	return 1;
+    }
     if (aff_node_type(n) != affNodeVoid) {
 	aff->error = "Changing the type of the node";
 	return 1;

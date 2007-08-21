@@ -13,8 +13,16 @@ aff_node_put_char(struct AffWriter_s *aff,
 		  const char *d,
 		  uint32_t s)
 {
-    if (aff == 0 || n == 0 || d == 0 || aff->error != 0)
+    if (aff == 0 || aff->error)
 	return 1;
+    if (n == 0) {
+	aff->error = "NULL node in aff_node_put_char()";
+	return 1;
+    }
+    if (d == 0) {
+	aff->error = "NULL data in aff_node_put_char()";
+	return 1;
+    }
     if (aff_node_type(n) != affNodeVoid) {
 	aff->error = "Changing the type of the node";
 	return 1;

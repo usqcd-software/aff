@@ -55,7 +55,7 @@ process_node(struct AffNode_s *n, void *arg)
     uint32_t n_size = aff_node_size(n);
 
     printf("%016llx [%6d] %6s %016llx ",
-	   n_id, n_size, type_name(n_type), n_parent);
+	   (long long)n_parent, n_size, type_name(n_type), (long long)n_id);
     print_name(n_name);
     switch (n_type) {
     default:

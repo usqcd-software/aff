@@ -37,8 +37,6 @@ struct RSection_s {
 };
 
 struct AffReader_s {
-    int                  header_size;
-    int                  fatal_error_p;
     const char          *error;
 
     FILE                *file;
