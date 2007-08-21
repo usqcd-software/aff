@@ -1,6 +1,5 @@
 #include <stdio.h>
-#include <strlib.h>
-#include <string.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include "treap.h"
