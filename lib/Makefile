@@ -28,8 +28,6 @@ stable.sources = stable-fini.c \
                  stable-print.c \
                  stable-foreach.c \
                  stable-init.c \
-                 stable-size.c \
-                 stable-fsize.c \
                  stable-insert.c \
                  stable-iblock.c \
                  stable-lookup.c \
@@ -41,15 +39,13 @@ stable.headers = stable-i.h \
 
 tree.sources = tree-fini.c \
                tree-foreach.c \
-               tree-fsize.c \
                tree-iblock.c \
                tree-index.c \
                tree-init.c \
                tree-insert.c \
                tree-lookup.c \
                tree-print.c \
-               tree-root.c \
-               tree-size.c
+               tree-root.c
 
 tree.headers = tree-i.h \
                tree.h

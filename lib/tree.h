@@ -33,7 +33,5 @@ struct AffNode_s *aff_tree_index(const struct AffTree_s *tree,
 struct AffNode_s *aff_tree_insert(struct AffTree_s *tree,
 				  struct AffNode_s *parent,
 				  const struct AffSymbol_s *name);
-uint64_t aff_tree_size(const struct AffTree_s *tn);
-uint64_t aff_tree_file_size(const struct AffTree_s *tn);
 
 #endif /* !defined(MARK_c57377cb_879b_4716_a827_b5a4428d7fbc) */

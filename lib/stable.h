@@ -23,8 +23,6 @@ const struct AffSymbol_s *aff_stable_index(const struct AffSTable_s *st,
 					   uint32_t index);
 const struct AffSymbol_s *aff_stable_insert(struct AffSTable_s *st,
 					    const char *name);
-uint32_t aff_stable_size(const struct AffSTable_s *st);
-uint64_t aff_stable_file_size(const struct AffSTable_s *st);
 void aff_stable_foreach(const struct AffSTable_s *st,
 			void (*proc)(const struct AffSymbol_s *sym,
 				     void *arg),
