@@ -1,4 +1,5 @@
 #include <libgen.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -70,7 +71,8 @@ process_xml(const char *out_name,
 {
     struct AffWriter_s *wr = aff_writer(out_name);
     struct AffNode_s *root;
-    const char *doc_name = basename(in_name);
+    char *in_copy = xstrdup(in_name);
+    const char *doc_name = basename(in_copy);
     xmlDocPtr doc = xmlParseFile(in_name);
     xmlNodePtr node;
     const char *msg;

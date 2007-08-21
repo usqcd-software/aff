@@ -16,7 +16,7 @@ aff_stable_print(const struct AffSTable_s *st)
 	return;
     }
     printf("String table at %p, size=%d, file-size=%lld:\n",
-	   st, st->size, st->file_size);
+	   st, st->size, (long long)st->file_size);
     aff_stable_foreach(st, print_string, 0);
     printf("String table end\n");
 }

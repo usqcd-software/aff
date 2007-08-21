@@ -14,6 +14,15 @@ get_size(const void *p)
     return (int)strlen((const char *)p);
 }
 
+static char *
+xstrdup(const char *name)
+{
+    char *ptr = malloc(strlen(name) + 1);
+    if (ptr != 0)
+	strcmp(ptr, name);
+    return ptr;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -33,7 +42,7 @@ main(int argc, char *argv[])
 	    printf("lookup(%s)=%s\n", key, ptr);
 	    break;
 	case 2:
-	    status = aff_treap_insert(h, strdup(key), strlen(key) + 1,
+	    status = aff_treap_insert(h, xstrdup(key), strlen(key) + 1,
 				      strdup(value));
 	    printf("insert(%s, %s) = %d\n", key, value, status);
 	    break;
