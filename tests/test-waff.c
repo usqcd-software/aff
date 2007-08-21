@@ -9,6 +9,16 @@
 #include <aff.h>
 #include <node.h>
 
+static char *
+xstrdup(const char *name)
+{
+    char *ptr = malloc(strlen(name) + 1);
+    if (ptr != 0)
+	strcmp(ptr, name);
+    return ptr;
+}
+
+
 static const char *
 normalize(const xmlChar *data)
 {

@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <strlib.h>
+#include <string.h>
 #include <string.h>
 #include <stdint.h>
 #include "treap.h"
@@ -43,7 +45,7 @@ main(int argc, char *argv[])
 	    break;
 	case 2:
 	    status = aff_treap_insert(h, xstrdup(key), strlen(key) + 1,
-				      strdup(value));
+				      xstrdup(value));
 	    printf("insert(%s, %s) = %d\n", key, value, status);
 	    break;
 	default:
