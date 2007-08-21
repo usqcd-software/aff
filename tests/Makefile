@@ -1,7 +1,8 @@
 # This is a makefile for tests, it does not need to be converted for configure
-XMLCFLAGS = $(shell xml2-config --cflags)
-XMLLIBS   = $(shell xml2-config --libs)
-CC        = gcc
+XMLCONFIG = xml2-config
+XMLCFLAGS = $(shell $(XMLCONFIG) --cflags)
+XMLLIBS   = $(shell $(XMLCONFIG) --libs)
+CC        = gcc -std=c99
 CFLAGS    = -Wall -g -I../lib $(XMLCFLAGS)
 LIBS      = -L../lib -llhpc-aff $(XMLLIBS)
 
