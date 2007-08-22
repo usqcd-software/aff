@@ -2,3 +2,11 @@
 - Documentation (Sergey)
 - Configure
 - Utilities
+- Restrict node names to an XML-compatible subset (in waff-mkdir).
+- Add node name checks into lhpc-aff check.
+- lhpc-aff operations
+--- extract
+--- join
+--- xml
+--- spectrum
+--- 3point

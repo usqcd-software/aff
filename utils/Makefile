@@ -6,8 +6,10 @@ CFLAGS = -Wall -g
 program = lhpc-aff
 headers = util.h \
           procs.def
+
 sources = lhpc-aff.c \
-          check.c
+          check.c \
+          ls.c
 
 all: $(program)
 
