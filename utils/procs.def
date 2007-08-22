@@ -1,0 +1,3 @@
+PROC("help", x_help, h_help, "print this help")
+PROC("version", x_version, h_version, "print the version of LHPC AFF")
+PROC("check", x_check, h_check, "check aff files integrity")
