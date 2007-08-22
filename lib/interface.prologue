@@ -1,0 +1,5 @@
+#ifndef _LHPC_AFF_H
+#define _LHPC_AFF_H
+#include <stdint.h>
+#include <stdarg.h>
+

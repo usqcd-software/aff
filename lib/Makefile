@@ -3,6 +3,7 @@ CC = gcc -std=c99 -DHAS_INTEGRAL_OFF_T
 CFLAGS = -g -Wall
 prefix = .
 library = liblhpc-aff.a
+interface = lhpc-aff.h
 
 sources=$(treap.sources) \
         $(stable.sources) \
@@ -71,6 +72,7 @@ md5.sources = md5.c
 md5.headers = md5.h
 
 aff.sources = aff-signature.c \
+              aff-version.c \
               waff-init.c \
               waff-fini.c \
               waff-errstr.c \
@@ -113,19 +115,31 @@ io.sources = io.c
 
 io.headers = io.h
 
+interface.parts = aff.h node.h tree.h stable.h treap.h md5.h coding.h
+
 .PHONY: all clean realclean install
 
-all: $(library)
+all: $(library) $(interface)
 
 clean:
 	$(RM) $(sources:%.c=%.o)
 
 realclean: clean
-	$(RM) $(library)
+	$(RM) $(library) $(interface)
 
 install:
 	echo "Install is not implemented yet"
 	exit 1
+
+$(interface): $(interface.parts) interface.prologue interface.epilogue
+	( cat interface.prologue > $(interface) && \
+	  for f in $(interface.parts) ; do \
+             echo '/*' $$f '*/' >> $(interface) ; \
+             grep -v MARK_ $$f >> $(interface) ; done && \
+          cat interface.epilogue >> $(interface)) || \
+        $(RM) $(interface)
+
+$(interface): Makefile
 
 $(library): $(sources:%.c=%.o)
 	ar cr $(library) $(sources:%.c=%.o)

@@ -1,8 +1,8 @@
 #ifndef MARK_c7329614_7d7a_4efe_9f6d_87477961bc99
 #define MARK_c7329614_7d7a_4efe_9f6d_87477961bc99
 
-/* AFF imported types */
-struct AffNode_s;
+/* AFF library version */
+const char *aff_version(void);
 
 /* AFF objects. Writers.
  *
@@ -19,6 +19,7 @@ struct AffNode_s;
  */
 
 struct AffWriter_s;
+struct AffNode_s;
 
 struct AffWriter_s *aff_writer(const char *file_name);
 const char *aff_writer_close(struct AffWriter_s *aff);
