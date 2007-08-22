@@ -4,10 +4,10 @@
 
 /* This file should be modified with each release to make SVN change the Id
  *
- * 2007/08/21 avp -- working version
+ * 2007/08/21 avp -- working version, playing with format
  */
 const char *
 aff_version(void)
 {
-    return "LHPC AFF $Id$";
+    return "LHPC AFF $Revision$ $Date$";
 }
