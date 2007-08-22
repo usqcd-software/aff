@@ -4,6 +4,7 @@ PROC("check",    x_check,   h_check,   "check aff files integrity")
 PROC("ls",       x_ls,      h_ls,      "list the content of the AFF file")
 /*
 PROC("extract",  x_get,     h_get,     "extract one section from the AFF file")
+PROC("cat",      x_cat,     h_cat,     "print one or more sections")
 PROC("join",     x_join,    h_join,    "join input files together")
 PROC("xml",      x_xml,     h_xml,     "convert AFF to XML")
 PROC("spectrum", x_2point,  h_2point,  "convert spectrum data into AFF")
