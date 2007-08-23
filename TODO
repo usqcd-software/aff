@@ -1,13 +1,12 @@
-- [done] The interface header building in lib/Makefile
-- [done?] Documentation (Sergey)
---[done] add another level to the TOC, insert pagebreaks where needed.
+[done] - The interface header building in lib/Makefile
+[done] - Documentation (Sergey)
+[done] -- add another level to the TOC, insert pagebreaks where needed.
 - Configure
-- [done] Restrict node names to an XML-compatible subset (in waff-mkdir).
-- [done] Add node name checks into lhpc-aff check.
+[done] - Restrict node names to an XML-compatible subset (in waff-mkdir).
+[done] - Add node name checks into lhpc-aff check.
 - Utilities
-- lhpc-aff operations
---- extract
---- join
---- xml
---- spectrum
---- 3point
+-- extract
+-- join
+-- xml
+-- spectrum
+-- 3point

@@ -258,7 +258,15 @@ The library uses global names starting with aff in all case combinations.
 Not all such names may be described in the present specification.
 It is illegal to rely on behavior of undescribed functions, data and types.
 
-The data types used by the AFF library interface are listed in table~\ref{tab:opaque_types}. All structures are made opaque so that the interface serves as an abstraction barrier between the implementation and the application codes. The only exception is \ctype{struct AffMD5\_s}.
+The data types used by the AFF library interface are listed in
+table~\ref{tab:opaque_types}. All structures are made opaque so that
+the interface serves as an abstraction barrier between the
+implementation and the application codes. The only exception is
+\ctype{struct AffMD5\_s}.
+
+The library does not contain any global variables and does not call any thread-unsafe functions. If a
+mutlithreaded program does not try to access the same AFF object from different threads at the same
+time, it is safe to use the library with POSIX threads.
 
 \begin{table}
 \caption{AFF interface opaque types.}
@@ -289,7 +297,7 @@ The interface consists of three parts.
 value if it does not.}
 \RetVal{Zero if \cvar{name} is permissible name, a non-zero value otherwise.}
 
-\subsection{AFF Writer}
+\subsection{Writers}
 \FuncHead{aff\_writer}
 {\Syn struct~AffWriter\_s~*aff\_writer (const~char~*fname);\par}
 \Desc{Allocate a writer, and initialize it.
@@ -382,7 +390,7 @@ value if it does not.}
 \RetVal{Return zero on success, and non-zero on failure.}
 %put a complex array ``d'' of size ``s'' into AFF file ``aff'' key node ``n'';
 
-\subsection{AFF Reader}
+\subsection{Reader}
 
 \FuncHead{aff\_reader}
 {\Syn struct~AffReader\_s~*aff\_reader (const~char~*file\_name);\par}
@@ -452,7 +460,7 @@ value if it does not.}
 The rest of AFF provides low level access to the library structures. Some of them are exported only because they are perceived to be generally useful, other are needed for non-trivial manipulation with
 the AFF objects. Users are advised to treat the functions below with respect.
 
-\subsection{AFF tree navigation}
+\subsection{Reader and writer tree navigation}
 
 \FuncHead{aff\_node\_foreach}
 {\Syn void~aff\_node\_foreach (struct~AffNode\_s~*n,  
@@ -522,7 +530,7 @@ the AFF objects. Users are advised to treat the functions below with respect.
   absent and \cvar{create} is zero, or attempt to create keys failed.}
 
 
-\subsection{AFF tree data structure}
+\subsection{Tree data structure}
 
 \FuncHead{aff\_tree\_init}
 {\Syn struct~AffTree\_s~*aff\_tree\_init (void);\par}
@@ -585,7 +593,7 @@ the AFF objects. Users are advised to treat the functions below with respect.
 %\RetVal{Return the size in bytes, or zero if \cvar{tn} is \NULL}
 %
 
-\subsection{AFF symbol table}
+\subsection{Symbol table}
 
 \FuncHead{aff\_stable\_init}
 {\Syn struct~AffSTable\_s~*aff\_stable\_init (void);\par}
@@ -637,7 +645,7 @@ inserted before. Return \NULL\ if \cvar{st} is \NULL.}
 \Desc{Call the function \cvar{proc} for each symbol in the table in order of their 
   index passing \cvar{arg} as an argument. If \cvar{st} is zero, nothing is done.}
 
-\subsection{AFF Symbols}
+\subsection{Symbols}
 
 \FuncHead{aff\_symbol\_name}
 {\Syn const~char~*aff\_symbol\_name (const~struct~AffSymbol\_s~*sym);\par}
