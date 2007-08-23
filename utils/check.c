@@ -15,6 +15,7 @@ static int verbose = 0;
 static void
 check_node(struct AffNode_s *node, void *ptr)
 {
+    const char *name;
     struct arg *arg = ptr;
     const struct AffSymbol_s *sym;
     enum AffNodeType_e type;
@@ -51,11 +52,18 @@ check_node(struct AffNode_s *node, void *ptr)
 	arg->result = 1;
 	return;
     }
-    if (aff_symbol_name(sym) == 0) {
+    name = aff_symbol_name(sym);
+    if (name == 0) {
 	fprintf(stderr, "lhpc-aff: error processing %s: missing symbol name\n",
 		arg->name);
 	arg->result = 1;
 	return;
+    }
+    if (aff_name_check(name) != 0) {
+	fprintf(stderr, "lhpc-aff: error processing %s: bad node name %s\n",
+                arg->name, name);
+        arg->result = 1;
+        return;
     }
     type = aff_node_type(node);
     size = aff_node_size(node);
@@ -159,7 +167,7 @@ check_file(const char *name)
     arg.r = r;
     arg.name = name;
     arg.result = 0;
-    check_node(aff_reader_root(r), &arg);
+    aff_node_foreach(aff_reader_root(r), check_node, &arg);
     ret = arg.result;
     if (verbose && ret == 0) {
 	printf("lhpc-aff: done processing %s\n", name);
