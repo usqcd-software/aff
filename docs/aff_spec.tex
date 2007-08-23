@@ -15,7 +15,7 @@
 \newcommand{\ec}{\end{center}}
 \newcommand{\bi}{\begin{itemize}}
 \newcommand{\ei}{\end{itemize}}             % terms and definitions
-\newcommand{\term}[1]{\textit{#1}}          %
+\newcommand{\term}[1]{\textit{#1}\index{\textit{#1}}}          %
 \newcommand{\ctext}[1]{\texttt{#1}}         % c mono text
 \newcommand{\cvar}[1]{\ctext{#1}}           % c variables(in func. prototypes, etc.)
 \newcommand{\libname}[1]{\ctext{#1}\index{\ctext{#1}}} % lib names, with indexing
@@ -39,7 +39,7 @@
 \def\RetVal#1{\par\noindent{\bf Return Value}\par
   \hangindent=16pt\hangafter=0\noindent#1\par}
 
-\setcounter{tocdepth}{2}
+\setcounter{tocdepth}{3}
 
 \begin{document}
 \centerline{\huge\bf AFF lattice data storage format}
@@ -128,7 +128,7 @@ Complex & 16 & \ctext{5}& double precision complex number \\ \hline
 \end{table}
 
 
-\section{Data file organization}
+\section{Data file organization}\label{file-org}
 An AFF file represents data organized as a tree structure. 
 It starts at \term{root} key, which may have multiple subkeys. 
 Each subkey of a given key must have a unique name. 
@@ -283,6 +283,12 @@ The interface consists of three parts.
 \Desc{Returns a string identifying the library version.}
 \RetVal{A non-\NULL\ string.}
 
+\FuncHead{aff\_name\_check}
+{\Syn int aff\_name\_check (const char *name);\par}
+\Desc{Check that \cvar{name} satisfies the constraints of section~\ref{file-org} and returns a non-zero
+value if it does not.}
+\RetVal{Zero if \cvar{name} is permissible name, a non-zero value otherwise.}
+
 \subsection{AFF Writer}
 \FuncHead{aff\_writer}
 {\Syn struct~AffWriter\_s~*aff\_writer (const~char~*fname);\par}
@@ -334,7 +340,8 @@ The interface consists of three parts.
 {\Syn struct~AffNode\_s~*aff\_writer\_mkdir (struct~AffWriter\_s~*aff, 
   struct~AffNode\_s~*dir, const~char~*name);\par}
 \Desc{Create a new subkey \cvar{name} in the key node \cvar{dir} with type 
-  \ctext{affNodeVoid} (no associated data type). The type may be changed later.}
+  \ctext{affNodeVoid} (no associated data type). The type may be changed later. The function calls
+  \ctext{aff\_name\_check()} to check that \cvar{name} is a legal name and reports an error if it is not. }
 \RetVal{Return the pointer to the new key node on success, and \NULL\ on failures,
   i.e. the writer is not initialized, the name already exists, or not 
   enough memory.}

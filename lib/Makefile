@@ -73,6 +73,7 @@ md5.headers = md5.h
 
 aff.sources = aff-signature.c \
               aff-version.c \
+              aff-namecheck.c \
               waff-init.c \
               waff-fini.c \
               waff-errstr.c \

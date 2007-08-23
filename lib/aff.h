@@ -1,8 +1,9 @@
 #ifndef MARK_c7329614_7d7a_4efe_9f6d_87477961bc99
 #define MARK_c7329614_7d7a_4efe_9f6d_87477961bc99
 
-/* AFF library version */
+/* AFF library information */
 const char *aff_version(void);
+int aff_name_check(const char *name);
 
 /* AFF objects. Writers.
  *

@@ -22,6 +22,10 @@ aff_writer_mkdir(struct AffWriter_s *aff,
 	aff->error = "NULL name in aff_writer_mkdir()";
 	return 0;
     }
+    if (aff_name_check(name)) {
+	aff->error = "Illegal name in aff_writer_mkdir()";
+	return 0;
+    }
     res = aff_node_chdir(aff->tree, aff->stable, dir, 1, name);
     if (res == 0)
 	aff->error = "aff_writer_mkdir() failed";
