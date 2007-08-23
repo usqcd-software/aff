@@ -30,7 +30,7 @@
 %\newcommand{\Description}{{\textbf Description}\\}
 %\newcommand{\Synopsis}{{\textbf Synopsis}\\}
 %\newcommand{\RetValue}{{\textbf Return value}\\}
-\def\FuncHead#1{\subsection{\libname{#1}}}
+\def\FuncHead#1{\subsubsection{\libname{#1()}}}
 \def\Syn{\par\noindent{\bf Synopsis}\tt
   \everypar={\hangindent=64pt\hangafter=1
     \raggedright\hspace{16pt}}\par\noindent}
@@ -47,7 +47,7 @@
 \centerline{\it Andrew~V.~Pochinsky, Sergey~N.~Syritsyn}
 \centerline{\it MIT CTP, Cambridge, MA}
 \vspace{10pt}
-\centerline{\today}
+\centerline{August 23, 2007}
 \vspace{20pt}
 
 \noindent This document describes the AFF data storage format. 
@@ -100,29 +100,29 @@ These utilities will allow searching and printing the keys, printing data, mergi
 insertion of data, and deleting entries. Probably, conversion from XML to ADAT will be possible,
 but only for XML files with unique keys.
 
+\section{Command line utility}
+There is a command line utility, \libname{lhpc-aff} that allows one to manipulate AFF files from the shell, and has its own help.
 
 \section{Platform-independent data}
 Both data and service information is stored in platform-independent format. 
 Information on bit size of numbers is written in the header of an AFF file.
 All integer numbers are stored in big-endian form. 
-Double precision numbers are stored in some format\footnote{Ask Andrew Pochinsky ; his cell
-number is ...}; the bit length and the mantissa size is stored in the header and is sufficient
-to restore a \ctype{double} number on a machine of any architecture. 
+Double precision numbers are stored in a portable binary format; the parameters of the floating
+point representation are stored in the file providing enough information to restore \ctype{double}
+numbers on a machine of any reasonable architecture. 
 A complex number is stored as a sequence of two double precision numbers, first the real part,
 and second the imaginary part.
 
 \begin{table}[ht]
-\label{tab:types}
 \bc
-\caption{Numeric data types}
-\begin{tabular}{c|c|l} \hline
-Type & Size, bytes & Comment \\ \hline
-Void & 0 & Empty node \\
-Char & 1 & String(array of chars) \\
-Int32 & 4 & 32-bit integer \\
-Int64 & 8 & 64-bit integer \\
-Double & 8 & double precision real number \\
-Complex & 16 & double precision complex number \\ \hline
+\caption{Numeric data types}\label{tab:types}
+\begin{tabular}{|c|c|c|l|} \hline
+Type & Size, bytes & Encoding & Comment \\ \hline
+Void & 0 & \ctext{1}& Empty node \\
+Char & 1 & \ctext{2}& String(array of chars) \\
+Int   & 4 & \ctext{3}& 32-bit integer \\
+Double & 8 & \ctext{4}& double precision real number \\
+Complex & 16 & \ctext{5}& double precision complex number \\ \hline
 \end{tabular}
 \ec
 \end{table}
@@ -136,11 +136,16 @@ Each subkey of a given key must have a unique name.
 Each subkey may have data associated with it, which is an arbitrary length array of any
 predefined elementary types.
 Single number is represented as an array of length 1.
-Possible data types are listed in tab.\ref{tab:types}
+Possible data types are listed in table~\ref{tab:types}.
 
-Access to any key and data associated with it is realized through a path created from
-key names starting with root \example{/}:
-\exblock{/key1/key2/.../keyN}
+The data in AFF is named using hierarchical names, called \term{keys}. The namespace organization and semantics of the keys is very close to UNIX file names. A data key is a sequence of subkeys, which
+we write here as a UNIX file name: \ctext{/key1/key2/.../keyN}. The top node in an AFF file is its
+\term{root}, called \ctext{/}. Part of a key between consecutive slashes is called a \term{subkey}. To simplify transitions between AFF and XML, we restrict the character set allowed in subkeys is restricted to the following grammar (this is a subset of XML names):
+\begin{eqnarray*}
+\langle subkey \rangle & ::= & (\langle Letter \rangle | \verb|_| | \verb|:| ) | \langle nameChar \rangle^{*} \\
+\langle nameChar \rangle & ::= & \langle Letter \rangle | \langle Digit \rangle | \verb|.| | \verb|-| | \verb|_| | \verb|:|
+\end{eqnarray*}
+The subkeys are case-sensitive as in XML.
 
 
 \section{Data file layout}
@@ -156,155 +161,182 @@ it is placed in the beginning of the file
 
 Each section may be located anywhere in a file. 
 Their positions are stored in a header. 
-Usually, a file starts with a header, then there is a data section, and symbol and tree tables 
-are in the end of the file.
+An AFF file starts with a header, then there is usually a data section, and symbol and tree tables 
+are in the end of the file. It should be noted that this order of sections in the AFF file is not mandated, a file is arbitrary places section is valid (even if they overlap.)
 
 \subsection{Header}
 
 \begin{table}[h]
-\label{tab:header}
 \bc
-\caption{Header layout}
-\begin{tabular}{|c|c|} \hline
-Signature & ??? \\ \hline
-Symbol table header & ??? \\ \hline
-Tree header & ??? \\ \hline
-Data header & ??? \\ \hline
-Header MD5 sum & 16 \\ \hline
+\caption{Header layout}\label{tab:header}
+\begin{tabular}{|l|c|} \hline
+ & Size, bytes \\ \hline\hline
+Signature & 32 \\ \hline
+Symbol table header & 32 \\ \hline
+Tree header & 32 \\ \hline
+Data header & 32 \\ \hline
+Header MD5 sum & 16 \\ \hline\hline
+Total & 144 \\ \hline
 \end{tabular}
 \ec
 \end{table}
 
 \begin{table}[h]
-\label{tab:signature}
 \bc
-\caption{Signature layout}
-\begin{tabular}{|c|c|} \hline
-File version string, null-terminated &  21 ??? \\ \hline
+\caption{Signature layout}\label{tab:signature}
+\begin{tabular}{|l|c|} \hline
+ & Size, bytes \\ \hline\hline
+File version string, null-terminated &  21\\ \hline
 Bits in Char & 1 \\ \hline
 Bits in Double & 1 \\ \hline
 Bits in Double mantissa & 1 \\ \hline
 Exponents in Double & 4 \\ \hline
-Header size in bytes & 4 \\ \hline
+Header size in bytes & 4 \\ \hline\hline
+Total & 32 \\ \hline
 \end{tabular}
 \ec
 \end{table}
 
 
 \subsection{Symbol table, tree, and data headers}
-
+All three section headers have the same format described in table~\ref{tab:shdr}. Section offset and size is stored in big-endian order regardless of the machine endianess.
 \begin{table}[h]
-\label{tab:table_header}
 \bc
-\caption{Symbol table, tree, and data header layout}
-\begin{tabular}{|c|c|} \hline
+\caption{Symbol table, tree, and data header layout}\label{tab:shdr}
+\begin{tabular}{|l|c|} \hline
+ & Size, bytes \\ \hline\hline
 Offset  & 8 \\ \hline
 Size in bytes & 8 \\ \hline
 Section MD5 sum & 16 \\ \hline
+Total & 32 \\ \hline
 \end{tabular}
 \ec
 \end{table}
 
 \subsection{Symbol table}
-Symbol table is a list of strings separated by a null char.
+Symbol table is a list of strings separated by a null char. The string stored in the symbol table are implicitly numbered starting with zero. This ordering is used in the tree table below to refer to subkeys of the nodes..
 
 \subsection{Tree table}
-Tree is represented by a table of entries. Each entry describes one node in a tree.
+The AFF file tree is represented by a table of entries. Each entry describes one node in a tree. Nodes without data have type Void and are stored according to table~\ref{tab:void}. All other nodes are stored according to table~\ref{tab:tree_entry}. Types are encoded according to table~\ref{tab:types}. The root node is not stored in the tree table, as it always has itself as a parent and an empty name, and there is data stored in it. Other nodes are implicitly numbered starting with \ctext{1}. These numbers are used in the parent node fields to refer to node's parent. A proper tree table describes a tree, e.g.,~every node has a parent and there is no cycles.
 
 \begin{table}[h]
-\label{tab:tree_entry}
 \bc
-\caption{Tree single entry layout}
-\begin{tabular}{|c|c|} \hline
+\caption{Void tree entry layout}
+\label{tab:void}
+\begin{tabular}{|l|c|} \hline
+ & Size, bytes \\ \hline\hline
+Type & 1 \\ \hline
+Parent node Id & 8 \\ \hline
+Node name Id (ref. to symbol table) & 4 \\ \hline
+Total & 13 \\ \hline
+\end{tabular}
+\ec
+\end{table}
+
+\begin{table}[h]
+\bc
+\caption{Non-vod tree entry layout}
+\label{tab:tree_entry}
+\begin{tabular}{|l|c|} \hline
+ & Size, bytes \\ \hline\hline
 Type & 1 \\ \hline
 Parent node Id & 8 \\ \hline
 Node name Id (ref. to symbol table) & 4 \\ \hline
 Size of stored array & 4 \\ \hline
 Offset of stored data & 8 \\ \hline
+Total & 25 \\ \hline
 \end{tabular}
 \ec
 \end{table}
 
-\newpage
-
 
 \section{AFF library interface}
-AFF library is written in C and can be used by including the library header file ``lhpc-aff.h''. 
+AFF library is written in C and can be used by including the library header file \verb|lhpc-aff.h|.
 There is also lhpc-aff-config utility that allows one to obtain proper flags 
 and libraries needed by AFF.
 The library uses global names starting with aff in all case combinations. 
 Not all such names may be described in the present specification.
-It is illegal to rely on behavior of undescribed functions and types.
+It is illegal to rely on behavior of undescribed functions, data and types.
 
-There are several opaque types which are used by the AFF library to access data:
+The data types used by the AFF library interface are listed in table~\ref{tab:opaque_types}. All structures are made opaque so that the interface serves as an abstraction barrier between the implementation and the application codes. The only exception is \ctype{struct AffMD5\_s}.
+
 \begin{table}
 \caption{AFF interface opaque types.}
 \label{tab:opaque_types}
-\begin{tabular}{|c|c|} \hline
-\libtype{AffWriter\_s} & A handler of an AFF file opened for writing \\ \hline
-\libtype{AffReader\_s} & A handler of an AFF file opened for reading \\ \hline
-\libtype{AffTree\_s} & A handler of an AFF tree \\ \hline
-\libtype{AffNode\_s} & A handler of an AFF tree node \\ \hline
-\libtype{AffSTable\_s} & A handler of an AFF symbol table \\ \hline
-\libtype{AffSymbol\_s} & A symbol created and stored by the symbol table \\ \hline
-\libtype{AffMD5\_s} & MD5 sum state \\ \hline
-\libtype{AffNodeType\_e} & Type of the data stored in a node \\ \hline
+\begin{tabular}{|l|c|} \hline
+\libtype{struct AffWriter\_s} & A handler of an AFF file opened for writing \\ \hline
+\libtype{struct AffReader\_s} & A handler of an AFF file opened for reading \\ \hline
+\libtype{struct AffTree\_s} & A handler of an AFF tree \\ \hline
+\libtype{struct AffNode\_s} & A handler of an AFF tree node \\ \hline
+\libtype{struct AffSTable\_s} & A handler of an AFF symbol table \\ \hline
+\libtype{struct AffSymbol\_s} & A symbol created and stored by the symbol table \\ \hline
+\libtype{struct AffMD5\_s} & MD5 sum state \\ \hline
+\libtype{enum AffNodeType\_e} & Type of the data stored in a node \\ \hline
 \end{tabular}
 \end{table}
 
+The interface consists of three parts.
+\subsection{Library information}
 
+\FuncHead{aff\_version}
+{\Syn const char *aff\_version (void);\par}
+\Desc{Returns a string identifying the library version.}
+\RetVal{A non-\NULL\ string.}
+
+\subsection{AFF Writer}
 \FuncHead{aff\_writer}
-{\Syn struct~AffWriter\_s~*aff\_writer (const~char~*fname)\par}
-\Desc{Allocate \libname{AffWriter\_s}, initialize it.
+{\Syn struct~AffWriter\_s~*aff\_writer (const~char~*fname);\par}
+\Desc{Allocate a writer, and initialize it.
   Open a file for writing, initialize empty tables.
   If the file already exists, it is removed first.
-  The right way to query status of \libname{aff\_writer} is to call
-  \libname{aff\_writer\_errstr} on the result. 
-  If \ctext{errstr()} returns \NULL, the object has been successfully
-  created, otherwise \ctext{errstr()} returns a description of the error.
-  Any pointer returned from \libname{aff\_writer} should be passed to 
-  \libname{aff\_writer\_close} to free resources.
+  To query the status of \ctext{aff\_writer()} one calls
+  \ctext{aff\_writer\_errstr()} on the result. 
+  If \ctext{aff\_writer\_errstr()} returns \NULL, the object has been successfully
+  created, otherwise \ctext{aff\_writer\_errstr()} returns a description of the error.
+  Any pointer returned from \ctext{aff\_writer()} should be passed to 
+  \ctext{aff\_writer\_close()} to free resources.
   }
-\RetVal{Return a pointer to an \libname{AffWriter\_s}. The status must be checked by calling
-  \libname{aff\_writer\_errstr}.}
+\RetVal{Return a pointer to a \ctext{struct AffWriter\_s}. The status must be checked by calling
+  \ctext{aff\_writer\_errstr()}.}
+
 
 \FuncHead{aff\_writer\_close}
-{\Syn const~char~*aff\_writer\_close (struct~AffWriter\_s~*aff)\par}
+{\Syn const~char~*aff\_writer\_close (struct~AffWriter\_s~*aff);\par}
 \Desc{Finalize writing, calculate MD5 sums, write all service tables and header, 
   and close the file.}
-\RetVal{Return \NULL on success, and a pointer to an error string on failure.}
+\RetVal{Return \NULL\ on success, and a pointer to an error string on failure.}
 
 \FuncHead{aff\_writer\_errstr}
-{\Syn const~char~*aff\_writer\_errstr (struct~AffWriter\_s~*aff)\par}
-\Desc{Return a pointer to an error string from the last fault.
-  AFF implements latching errors: if an error occurs on a \libtype{AffWrtier\_s} object, 
+{\Syn const~char~*aff\_writer\_errstr (struct~AffWriter\_s~*aff);\par}
+\Desc{Return a description of the error associated with the writer object.
+  AFF implements latching errors: if an error occurs on a writer object, 
   this object will signal errors on all subsequent calls. 
   The first error message is stored in the object and is accessible 
-  via \libname{aff\_writer\_errstr} call.}
-\RetVal{Return the string with the last error occurred, or \NULL if there were no errors.}
+  via \ctext{aff\_writer\_errstr()} call.}
+\RetVal{Return the string describing the error recorded in the writer object, or \NULL\ if there were no errors.}
 
 \FuncHead{aff\_writer\_stable}
-{\Syn struct~AffSTable\_s~*aff\_writer\_stable (struct~AffWriter\_s~*aff)\par}
+{\Syn struct~AffSTable\_s~*aff\_writer\_stable (struct~AffWriter\_s~*aff);\par}
 \Desc{Get the pointer the symbol table of the writer}
-\RetVal{The pointer on success, or \NULL if \libname{AffWriter\_s} is not initialized.}
+\RetVal{The pointer on success, or \NULL\ if the writer is not initialized.}
 
 \FuncHead{aff\_writer\_tree}
-{\Syn struct~AffTree\_s~*aff\_writer\_tree (struct~AffWriter\_s *aff)\par}
+{\Syn struct~AffTree\_s~*aff\_writer\_tree (struct~AffWriter\_s *aff);\par}
 \Desc{Get the pointer to the tree table of the writer}
-\RetVal{The pointer on success, or \NULL if \libname{AffWriter\_s} is not initialized.}
+\RetVal{The pointer on success, or \NULL\ if the writer is not initialized.}
   
 \FuncHead{aff\_writer\_root}
-{\Syn struct~AffNode\_s~*aff\_writer\_root (struct~AffWriter\_s~*aff)\par}
+{\Syn struct~AffNode\_s~*aff\_writer\_root (struct~AffWriter\_s~*aff);\par}
 \Desc{Get the handler to the root node. Any initialized writer always have a root node.}
-\RetVal{The pointer on success, or \NULL if \libname{AffWriter\_s} is not initialized.}
+\RetVal{The pointer on success, or \NULL\ if the writer is not initialized.}
 
 \FuncHead{aff\_writer\_mkdir}
 {\Syn struct~AffNode\_s~*aff\_writer\_mkdir (struct~AffWriter\_s~*aff, 
-  struct~AffNode\_s~*dir, const~char~*name)\par}
+  struct~AffNode\_s~*dir, const~char~*name);\par}
 \Desc{Create a new subkey \cvar{name} in the key node \cvar{dir} with type 
-  \ctext{AffNodeVoid} (no associated data type). The type may be changed later.}
-\RetVal{Return the pointer to the new key node on success, and \NULL on failures,
-  i.e. \libname{AffWriter\_s} is not initialized, the name already exists, or not 
+  \ctext{affNodeVoid} (no associated data type). The type may be changed later.}
+\RetVal{Return the pointer to the new key node on success, and \NULL\ on failures,
+  i.e. the writer is not initialized, the name already exists, or not 
   enough memory.}
 
 
@@ -343,50 +375,52 @@ There are several opaque types which are used by the AFF library to access data:
 \RetVal{Return zero on success, and non-zero on failure.}
 %put a complex array ``d'' of size ``s'' into AFF file ``aff'' key node ``n'';
 
+\subsection{AFF Reader}
+
 \FuncHead{aff\_reader}
 {\Syn struct~AffReader\_s~*aff\_reader (const~char~*file\_name);\par}
-\Desc{Allocate \libname{AffWriter\_s}, initialize it. 
+\Desc{Allocate a reader and initialize it. 
   Open a file for reading, read all tables. To check the status of \ctext{aff\_reader()}, 
-  \libname{aff\_reader\_errstr} must be called. \ctext{errstr()} returns \NULL on success, 
+  \ctext{aff\_reader\_errstr()} must be called. \ctext{aff\_reader\_errstr()} returns \NULL\ on success, 
   and the description of a problem otherwise. Any pointer returned by \ctext{aff\_reader()} 
-  must be passed later to \libname{aff\_reader\_close} to free the resources.}
-\RetVal{Return a pointer to \libname{AffWriter\_s}. The status must be checked by calling
-  \libname{aff\_writer\_errstr}.}
+  must be passed later to \ctext{aff\_reader\_close()} to free the resources.}
+\RetVal{Return a pointer to \ctext{struct AffWriter\_s}. The status must be checked by calling
+  \ctext{aff\_writer\_errstr()}.}
 
 \FuncHead{aff\_reader\_close}
-{\Syn int~aff\_reader\_close (struct~AffReader\_s~*aff);\par}
-\Desc{Close a file, deallocate \libname{AffReader\_s} and all its tables.}
-\RetVal{Zero on success, non-zero on failure}
+{\Syn void~aff\_reader\_close (struct~AffReader\_s~*aff);\par}
+\Desc{Close a file, deallocate a reader and all its tables.}
 
 \FuncHead{aff\_reader\_errstr}
 {\Syn const~char~*aff\_reader\_errstr (struct~AffReader\_s~*aff);\par}
 \Desc{Get an error string from the last failure.}
-\RetVal{Return a pointer to a string, or \NULL if no errors have occurred.}
+\RetVal{Return a pointer to a string, or \NULL\ if no errors have occurred.}
 
 \FuncHead{aff\_reader\_stable}
 {\Syn struct~AffSTable\_s~*aff\_reader\_stable (const~struct~AffReader\_s~*aff);\par}
-\Desc{Get the symbol table.}
-\RetVal{Return a pointer to the symbol table, or \NULL if \cvar{aff} 
+\Desc{Get reader's symbol table.}
+\RetVal{Return a pointer to the symbol table, or \NULL\ if \cvar{aff} 
   is not initialized.}
   
 \FuncHead{aff\_reader\_tree}
 {\Syn struct~AffTree\_s~*aff\_reader\_tree (struct~AffReader\_s~*aff);\par}
-\Desc{Get the tree table.}
-\RetVal{Return a pointer to the symbol table, or \NULL if \cvar{aff} 
+\Desc{Get the reader's tree table.}
+\RetVal{Return a pointer to the symbol table, or \NULL\ if \cvar{aff} 
   is not initialized.}
   
 \FuncHead{aff\_reader\_root}  
 {\Syn struct~AffNode\_s~*aff\_reader\_root (struct~AffReader\_s~*aff);\par}
-\Desc{Get the root node handler. Root node is always defined, even for empty tree.}
-\RetVal{Return a pointer to the root node handler, or \NULL if \cvar{aff} 
+\Desc{Get the root node handler of the reader. Root node is always defined, even for empty tree.}
+\RetVal{Return a pointer to the root node handler, or \NULL\ if \cvar{aff} 
   is not initialized.}
   
 \FuncHead{aff\_reader\_chdir}
 {\Syn struct~AffNode\_s~*aff\_reader\_chdir (struct~AffReader\_s~*aff, 
   struct~AffNode\_s~*dir, const~char~*name);\par}
 \Desc{Get the handler to the subkey \cvar{name} in the key node \cvar{dir}.
-  If the node does not exist, an error will be set in the \libname{AffReader\_s} object.}
-\RetVal{Return a pointer to the handler or \NULL if it does not exist 
+  If the node does not exist, an error will be set in the reader object. Note that this function should not be
+  used to probe for presence of a subkey because of failure it will render the reader unusable.}
+\RetVal{Return a pointer to the handler or \NULL\ if it does not exist 
   or there is other failure.}
 
 \FuncHead{aff\_node\_get\_{\it type}}
@@ -402,24 +436,28 @@ There are several opaque types which are used by the AFF library to access data:
   in the key node \cvar{n} and store it to \cvar{d}. 
   Type may be \ctype{char}, \ctype{int}(32 bits),
   \ctype{double} or \ctype{complex}.
-  If the data type does not match, an error will be set in the \libname{AffReader\_s} object.
+  If the data type does not match, an error will be set in the reader object. The size\cvar{s} may differ
+  from the size of the node. If \cvar{s} is smaller than the node size, \cvar{d} will receive the initial portion of the node data. If \cvar{s} is larger than the node data, its initial portion will be filled with the node data. Values in the rest of the buffer are unspecified in this case.
   }
-\RetVal{Return zero on success, and non-zero on failure.}
+\RetVal{Return zero on success, and non-zero on failure. An failure causes an error to be stored in the reader object.}
 
+\section{AFF low level interfaces}
+The rest of AFF provides low level access to the library structures. Some of them are exported only because they are perceived to be generally useful, other are needed for non-trivial manipulation with
+the AFF objects. Users are advised to treat the functions below with respect.
 
-\section{AFF tree navigation}
+\subsection{AFF tree navigation}
 
 \FuncHead{aff\_node\_foreach}
 {\Syn void~aff\_node\_foreach (struct~AffNode\_s~*n,  
   void~(*proc)(struct~AffNode\_s~*child,  void~*arg),
   void~*arg);\par}
 \Desc{Call function \cvar{proc} for each child of the node \cvar{n},
-  and transfer \cvar{arg} as an argument. If \cvar{n} is \NULL, nothing is done.}
+  and transfer \cvar{arg} as an argument. If \cvar{n} is \NULL\, nothing is done.}
 
 \FuncHead{aff\_node\_id}
 {\Syn uint64\_t~aff\_node\_id (const~struct~AffNode\_s~*tn);\par}
 \Desc{Get 64-bit node ID}
-\RetVal{Return node ID. If \cvar{tn} is \NULL, return special value with all bits set.}
+\RetVal{Return the node ID. If \cvar{tn} is \NULL\, return special value with all bits set.}
 
 \FuncHead{aff\_node\_name}
 {\Syn const~struct~AffSymbol\_s~*aff\_node\_name (const~struct~AffNode\_s~*n);\par}
@@ -451,8 +489,8 @@ There are several opaque types which are used by the AFF library to access data:
 \FuncHead{aff\_node\_assign}
 {\Syn int~aff\_node\_assign (struct~AffNode\_s~*node,
   enum~AffNodeType\_e~type, uint32\_t~size, uint64\_t~offset);\par}
-\Desc{Assign type to the node \cvar{node}. This function is internal and should not
-  be called by a user.}
+\Desc{Assign type to the node \cvar{node}. This function is internal to the library and should not
+  be normally called by a user.}
 \RetVal{Return zero on success, and non-zero on failure.}
 
 \FuncHead{aff\_node\_{\it chdir}}
@@ -473,17 +511,17 @@ There are several opaque types which are used by the AFF library to access data:
   into subkeys with names transferred as \NULL-terminated array, va\_list 
   and \NULL-terminated argument list. If \cvar{create} is non-zero, all absent directories are
   created.}
-\RetVal{Returns the handler of the target key on success. Returns \NULL if the target key is
+\RetVal{Returns the handler of the target key on success. Returns \NULL\ if the target key is
   absent and \cvar{create} is zero, or attempt to create keys failed.}
 
 
-\section{AFF tree data structure}
+\subsection{AFF tree data structure}
 
 \FuncHead{aff\_tree\_init}
 {\Syn struct~AffTree\_s~*aff\_tree\_init (void);\par}
 \Desc{Allocate and initialize an AFF tree structure with only one node,
   which is root. The name of the root is an empty string ``''.}
-\RetVal{Return a pointer to a new AFF tree, or \NULL if allocation failed.}
+\RetVal{Return a pointer to a new AFF tree, or \NULL\ if allocation failed.}
 
 \FuncHead{aff\_tree\_fini}
 {\Syn void~*aff\_tree\_fini (struct~AffTree\_s~*tree);\par}
@@ -505,13 +543,13 @@ There are several opaque types which are used by the AFF library to access data:
 \FuncHead{aff\_tree\_root}
 {\Syn struct~AffNode\_s~*aff\_tree\_root (const~struct~AffTree\_s~*tree);\par}
 \Desc{Get the root of the \cvar{tree}. A root is always present.}
-\RetVal{Return a pointer to the root handler, or \NULL if \cvar{tree} is \NULL.}
+\RetVal{Return a pointer to the root handler, or \NULL\ if \cvar{tree} is \NULL.}
 
 \FuncHead{aff\_tree\_lookup}
 {\Syn struct~AffNode\_s~*aff\_tree\_lookup (const~struct~AffTree\_s~*tree,
   const~struct~AffNode\_s~*parent, const~struct~AffSymbol\_s~*name);\par}
 \Desc{Find the child of node \cvar{parent} with name \cvar{name}.}
-\RetVal{Return a pointer to the child node handler, or \NULL if \cvar{tree} is \NULL
+\RetVal{Return a pointer to the child node handler, or \NULL\ if \cvar{tree} is \NULL
   or no such child is found.}
 
 \FuncHead{aff\_tree\_index}
@@ -519,15 +557,15 @@ There are several opaque types which are used by the AFF library to access data:
   uint64\_t~index);\par}
 \Desc{Get the node handler by its index. The index starts from zero, which is 
   reserved for the root node.}
-\RetVal{Return a pointer to the node handler, or \NULL if \cvar{tree} is \NULL
+\RetVal{Return a pointer to the node handler, or \NULL\ if \cvar{tree} is \NULL
   or no such node is found.}
 
 \FuncHead{aff\_tree\_insert}
 {\Syn struct~AffNode\_s~*aff\_tree\_insert (struct~AffTree\_s~*tree,
   struct~AffNode\_s~*parent, const~struct~AffSymbol\_s~*name);\par}
 \Desc{Insert a child with name \cvar{name} to the node \cvar{parent}.}
-\RetVal{Return a pointer to the new child node handler, or \NULL if such 
-  node have already been present, \cvar{tree} is \NULL or the insertion failed.}
+\RetVal{Return a pointer to the new child node handler, or \NULL\ if such 
+  node have already been present, \cvar{tree} is \NULL\ or the insertion failed.}
 
 %\FuncHead{aff\_tree\_size}
 %{\Syn uint64\_t~aff\_tree\_size (const~struct~AffTree\_s~*tn);\par}
@@ -540,12 +578,12 @@ There are several opaque types which are used by the AFF library to access data:
 %\RetVal{Return the size in bytes, or zero if \cvar{tn} is \NULL}
 %
 
-\section{AFF symbol table}
+\subsection{AFF symbol table}
 
 \FuncHead{aff\_stable\_init}
 {\Syn struct~AffSTable\_s~*aff\_stable\_init (void);\par}
 \Desc{Allocate and initialize an empty symbol table.}
-\RetVal{Return a pointer to a new symbol table, or \NULL on failure.}
+\RetVal{Return a pointer to a new symbol table, or \NULL\ on failure.}
 
 \FuncHead{aff\_stable\_fini}
 {\Syn void~*aff\_stable\_fini (struct~AffSTable\_s~*st);\par}
@@ -559,14 +597,14 @@ There are several opaque types which are used by the AFF library to access data:
 {\Syn const~struct~AffSymbol\_s~*aff\_stable\_lookup (const~struct~AffSTable\_s~*st,
   const~char~*name);\par}
 \Desc{Lookup a symbol in the table by its string name}
-\RetVal{Return a pointer to symbol, or \NULL if there is no such symbol or
+\RetVal{Return a pointer to symbol, or \NULL\ if there is no such symbol or
   \cvar{st} is zero.}
 
 \FuncHead{aff\_stable\_index}
 {\Syn const~struct~AffSymbol\_s~*aff\_stable\_index (const struct~AffSTable\_s~*st,
   uint32\_t~index);\par}
 \Desc{Lookup a symbol in the table by its index. The index starts from zero.}
-\RetVal{Return a pointer to the symbol, or \NULL if there is no such symbol or
+\RetVal{Return a pointer to the symbol, or \NULL\ if there is no such symbol or
   \cvar{st} is zero.}
 
 \FuncHead{aff\_stable\_insert}
@@ -574,7 +612,7 @@ There are several opaque types which are used by the AFF library to access data:
   const~char~*name);\par}
 \Desc{Insert a new string into the symbol table. The string is duplicated insise.}
 \RetVal{Return a pointer to the new symbol, or a pointer to the symbol with the same string
-inserted before. Return \NULL if \cvar{st} is \NULL.}
+inserted before. Return \NULL\ if \cvar{st} is \NULL.}
 
 %\FuncHead{aff\_stable\_size}
 %{\Syn uint32\_t~aff\_stable\_size (const~struct~AffSTable\_s~*st);\par}
@@ -592,25 +630,27 @@ inserted before. Return \NULL if \cvar{st} is \NULL.}
 \Desc{Call the function \cvar{proc} for each symbol in the table in order of their 
   index passing \cvar{arg} as an argument. If \cvar{st} is zero, nothing is done.}
 
+\subsection{AFF Symbols}
+
 \FuncHead{aff\_symbol\_name}
 {\Syn const~char~*aff\_symbol\_name (const~struct~AffSymbol\_s~*sym);\par}
 \Desc{Get the name of the symbol. The string is stored internally in the symbol table
   and should not be freed or modified.}
-\RetVal{Return a pointer to the null-terminated string, or \NULL if \cvar{sym} is \NULL.}
+\RetVal{Return a pointer to the null-terminated string, or \NULL\ if \cvar{sym} is \NULL.}
 
 \FuncHead{aff\_symbol\_id}
 {\Syn uint32\_t~aff\_symbol\_id (const~struct~AffSymbol\_s~*sym);\par}
 \Desc{Get the index of a symbol.}
 \RetVal{Return the index, or 0xffffffff if \cvar{sym} is zero.}
 
-\section{Treap data structure implementation}
+\subsection{Treap structure}
 
-Manage treap data structure. \ctype{AffTreap\_s} is an opaque handler of a treap data structure.
+Manage treap data structure. \ctype{struct AffTreap\_s} is an opaque handler of a treap data structure.
 
 \FuncHead{aff\_treap\_init}
 {\Syn struct~AffTreap\_s~*aff\_treap\_init (void);\par}
 \Desc{Allocate and initialize an empty treap.}
-\RetVal{Return a pointer to a treap, or \NULL on failure.}
+\RetVal{Return a pointer to a treap, or \NULL\ on failure.}
 
 \FuncHead{aff\_treap\_fini}
 {\Syn void~*aff\_treap\_fini (struct~AffTreap\_s~*h);\par}
@@ -623,8 +663,8 @@ Manage treap data structure. \ctype{AffTreap\_s} is an opaque handler of a treap
   with key \cvar{b\_ptr} of length \cvar{b\_size}. 
   This function defines the ordering used by
   the treap internaly. It is probably of little use to the user.}
-\RetVal{Return -1 if key \cvar{a\_ptr} is less than \cvar{b\_ptr}, 
-  +1 if key \cvar{a\_ptr} is greater than \cvar{b\_ptr},
+\RetVal{Return \ctext{-1} if key \cvar{a\_ptr} is less than \cvar{b\_ptr}, 
+  \ctext{+1} if key \cvar{a\_ptr} is greater than \cvar{b\_ptr},
   and zero if they are equal.}
 
 \FuncHead{aff\_treap\_lookup}
@@ -632,7 +672,7 @@ Manage treap data structure. \ctype{AffTreap\_s} is an opaque handler of a treap
   const~void~*key, int~ksize);\par}
 \Desc{Lookup the the key \cvar{key} of length \cvar{ksize} in the treap \cvar{h}.}
 \RetVal{Return the pointer to the data associated with the \cvar{key}, 
-  or \NULL if there is no such key or \cvar{h} is \NULL.}
+  or \NULL\ if there is no such key or \cvar{h} is \NULL.}
 
 \FuncHead{aff\_treap\_insert}
 {\Syn int~aff\_treap\_insert (struct~AffTreap\_s~*h,
@@ -649,6 +689,8 @@ Manage treap data structure. \ctype{AffTreap\_s} is an opaque handler of a treap
 
 
 \section{MD5 sum functions}
+This functions implement MD5 cryptographic checksum as described in RFC 1321. The implementation
+is taken from the RFC, only the naming conventions were changed to confirm to the rest of the library.
 
 \FuncHead{aff\_md5\_init}
 {\Syn void~aff\_md5\_init (struct~AffMD5\_s~*);}
@@ -658,7 +700,7 @@ Manage treap data structure. \ctype{AffTreap\_s} is an opaque handler of a treap
 {\Syn void~aff\_md5\_update (struct AffMD5\_s~*, const~uint8\_t~*, uint32\_t);}
 \Desc{Update MD5 state when new data is added to a buffer.}
 
-\FuncHead{aff\_md5\_update}
+\FuncHead{aff\_md5\_final}
 {\Syn void~aff\_md5\_final (uint8\_t~[16], struct~AffMD5\_s~*);}
 \Desc{Produce the final value of MD5 sum.}
 

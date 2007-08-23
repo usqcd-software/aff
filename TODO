@@ -1,5 +1,6 @@
 - [done] The interface header building in lib/Makefile
 - Documentation (Sergey)
+-- add another level to the TOC, insert pagebreaks where needed.
 - Configure
 - Utilities
 - Restrict node names to an XML-compatible subset (in waff-mkdir).
