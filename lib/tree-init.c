@@ -19,7 +19,7 @@ aff_tree_init(struct AffSTable_s *stable)
 	free(tt);
 	return 0;
     }
-    tt->size = 0;
+    tt->size = 1;
     tt->file_size = 0;
     tt->last_block = &tt->block;
     tt->root.type = affNodeVoid;
