@@ -2,9 +2,11 @@ PROC("help",     x_help,    h_help,    "print this help")
 PROC("version",  x_version, h_version, "print the version of LHPC AFF")
 PROC("check",    x_check,   h_check,   "check aff files integrity")
 PROC("ls",       x_ls,      h_ls,      "list the content of the AFF file")
+PROC("import",	 x_import,  h_import,  "import data from standard input")
+PROC("cat",      x_cat,     h_cat,     "print one or more sections")
+
 /*
 PROC("extract",  x_get,     h_get,     "extract one section from the AFF file")
-PROC("cat",      x_cat,     h_cat,     "print one or more sections")
 PROC("join",     x_join,    h_join,    "join input files together")
 PROC("xml",      x_xml,     h_xml,     "convert AFF to XML")
 PROC("spectrum", x_2point,  h_2point,  "convert spectrum data into AFF")

@@ -9,7 +9,12 @@ headers = util.h \
 
 sources = lhpc-aff.c \
           check.c \
-          ls.c
+          ls.c \
+	  import.c \
+	  cat.c \
+	  chdir_keypath.c \
+	  copy_nodes.c \
+	  common.c
 
 all: $(program)
 
@@ -23,7 +28,7 @@ lib:
 	make -C ../lib
 
 $(program): $(sources:%.c=%.o)
-	$(CC) $(CFLAGS) -I../lib -o $@ $^ -L../lib -llhpc-aff
+	$(CC) $(CFLAGS) -static -I../lib -o $@ $^ -L../lib -llhpc-aff -lm
 
 $(sources:%.c=%.o): %.o: %.c
 	$(CC) $(CFLAGS) -I../lib -c -o $@ $<
