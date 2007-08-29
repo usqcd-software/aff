@@ -42,7 +42,8 @@ aff_tree_insert(struct AffTree_s         *tt,
     n->offset = 0;
     n->id = tt->size;
     n->next = parent->children;
-    ((struct AffNode_s *)parent)->children = n;
+    parent->children = n;
+    n->children = 0;
     if (aff_treap_insert(tt->treap, &n->key, sizeof (struct Key_s), n) != 0) {
 	return 0;
     }
