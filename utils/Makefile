@@ -12,6 +12,8 @@ sources = lhpc-aff.c \
           ls.c \
 	  import.c \
 	  cat.c \
+	  insert.c \
+	  extract.c \
 	  chdir_keypath.c \
 	  copy_nodes.c \
 	  common.c

@@ -8,7 +8,6 @@
  *
  ***************************************************************************/
 #include <assert.h>
-#include <time.h>
 #include <unistd.h>
 #include <errno.h>
 #include <ctype.h>
@@ -136,74 +135,6 @@ int read_complex_list( double _Complex *buf, size_t max, FILE *fi )
     return max - cnt - 1;
 }
 
-#if 1
-static
-char *mk_tmp_filename( const char *mark, const char *fname )
-{
-    size_t fname_len = strlen( fname );
-    size_t mark_len = strlen( mark );
-    char *template = "XXXXXX";
-    size_t template_len = strlen( template );
-    char *res;
-    size_t res_max_len = fname_len + mark_len + template_len ;
-    if( NULL == ( res = (char *)malloc( res_max_len + 1 ) ) )
-    {
-        fprintf( stderr, "%s: not enough memory\n", __func__ );
-        exit(1);
-    }
-    size_t res_len;
-    strncpy( res, fname, fname_len + 1 ),           res_len = strlen( res );
-    strncpy( res + res_len, mark, mark_len + 1 ),   res_len = strlen( res );
-    strncpy( res + res_len, template, 
-            template_len + 1 ),                     res_len = strlen( res );
-    int mkres = mkstemp( res );
-    if( mkres < 0 )
-    {
-        free( res );
-        return NULL;
-    }
-    else
-    {
-        close( mkres );
-        return res;
-    }
-}
-#else 
-static
-char *mk_tmp_filename( const char *mark, const char *fname )
-{
-    size_t fname_len = strlen( fname );
-    size_t mark_len = strlen( mark );
-    char *res;
-    size_t res_max_len = fname_len + mark_len + template_len ;
-    if( NULL == ( res = (char *)malloc( res_max_len + 1 ) ) )
-    {
-        fprintf( stderr, "%s: not enough memory\n", __func__ );
-        exit(1);
-    }
-    size_t res_len;
-    strncpy( res, fname, fname_len + 1 ),           res_len = strlen( res );
-    strncpy( res + res_len, mark, mark_len + 1 ),   res_len = strlen( res );
-    snprintf( res + res_len, res_max_len - res_len, 
-            "%ld", (long int)getpid() ),           res_len = strlen( res );
-    size_t cnt = 1000;
-    long int postfix = time( NULL ) & 0xffffffffUL;
-    struct stat st;
-    while( cnt-- )
-    {
-        snprintf( res + res_len, res_max_len - res_len, ".%ld", postfix++ );
-        int i = stat( res, &st );
-        if( 0 == i )
-            continue;
-        if( ENOENT == errno )
-            return res; 
-        break;
-    }
-    free( res );
-    return NULL;
-}
-#endif
-
 
 static
 const char *insert_list( struct AffWriter_s *w, struct AffNode_s *w_node,
@@ -263,10 +194,12 @@ const char *insert_list( struct AffWriter_s *w, struct AffNode_s *w_node,
 
 int x_import( int argc, char *argv[] )
 {
+    int start_empty = 0;
     const char *status;
+    const char *fname = NULL;
     const char *out_fname = NULL;
     enum AffNodeType_e type = affNodeVoid;
-    long int num = -1;
+    long int num = 1;
 
     if( argc < 2 )
     {
@@ -311,6 +244,7 @@ int x_import( int argc, char *argv[] )
                     }
                     out_fname = *(++argv);
                 } break;
+            case 'e': start_empty = 1; break;
             default:
                 {
                     fprintf( stderr, "%s: unknown parameter -%c\n", 
@@ -322,115 +256,122 @@ int x_import( int argc, char *argv[] )
         
     }
     
-    const char *fname = NULL;
-    if( argc-- )
-        fname = *(argv++);
-    else
+    if( !start_empty )
     {
-        fprintf( stderr, "%s: no aff-file name\n", __func__ );
-        return 1;
-    }
-
-    const char *key_path = "";
-    if( argc-- )
-        key_path = *(argv++);
-    
-    struct AffReader_s *r;
-    r = aff_reader( fname );
-    if( NULL != ( status = aff_reader_errstr( r ) ) )
-    {        
-        fprintf( stderr, "%s: %s\n", __func__, aff_reader_errstr( r ) );
-        goto err_clean_r;
-    }
-    struct AffNode_s *r_root = aff_reader_root( r );
-    if( NULL == r_root )
-    {
-        fprintf( stderr, "%s: %s\n", __func__, aff_reader_errstr( r ) );
-        goto err_clean_r;
-    }
-    // TODO check that the key is empty
-    
-    char *tmp_fname;
-    if( NULL == out_fname )
-    {
-        if( NULL == ( tmp_fname = mk_tmp_filename( ".aff-tmp.", fname ) ) )
+        if( !(argc--) )
         {
-            fprintf( stderr, "%s: cannot create a unique writable file\n", __func__ );
-            perror( __func__ );
+            fprintf( stderr, "%s: no aff file name given; try 'lhpc-aff help import'\n", __func__ );
             return 1;
         }
+        else
+            fname = *(argv++);
+        if( NULL == out_fname )
+            out_fname = fname;
     }
     else
+        if( NULL == out_fname )
+        {
+            fprintf( stderr, "%s: for empty start aff file, output file name must be specified; " 
+                    "try 'lhpc-aff help import'\n", __func__ );
+            return 1;
+        }
+
+    const char *key_path = NULL;
+    if( !(argc--) )
     {
-        tmp_fname = (char *)malloc(  strlen( out_fname ) + 1 );
-        strcpy( tmp_fname, out_fname );
+        fprintf( stderr, "%s: no keypath given; try 'lhpc-aff help import'\n", __func__ );
+        return 1;
     }
-            
-    struct AffWriter_s *w = aff_writer( tmp_fname );
-    if( NULL != ( status = aff_reader_errstr( r ) ) )
+    else
+        key_path = *(argv++);
+    
+    char *tmp_fname;
+    if( NULL == ( tmp_fname = mk_tmp_filename( ".aff-tmp.", out_fname ) ) )
     {
-        fprintf( stderr, "%s: %s\n", __func__, aff_writer_errstr( w ) );
-        goto err_clean_rw;
+        fprintf( stderr, "%s: cannot create a unique writable file\n", __func__ );
+        perror( __func__ );
+        return 1;
+    }
+    
+    struct AffWriter_s *w = aff_writer( tmp_fname );
+    if( NULL != ( status = aff_writer_errstr( w ) ) )
+    {
+        fprintf( stderr, "%s: %s: %s\n", __func__, tmp_fname, aff_writer_errstr( w ) );
+        goto err_clean_w;
     }
     struct AffNode_s *w_root = aff_writer_root( w );
     if( NULL == w_root )
     {
         fprintf( stderr, "%s: %s\n", __func__, aff_writer_errstr( w ) );
-        goto err_clean_rw;
+        goto err_clean_w;
     }
-
-    // copy all nodes
-    struct copy_nodes_arg arg;
-    arg.r = r;
-    arg.w = w;
-    arg.w_parent = NULL;
-    arg.errstr = NULL;
-    copy_nodes_recursive( r_root, (void *)&arg );
-    if( NULL != arg.errstr )
-    {
-        fprintf( stderr, "%s: %s\n", __func__, arg.errstr );
-        goto err_clean_rw;
-    }
-    
     struct AffNode_s *w_node = mkdir_path( w, w_root, key_path );
     if( NULL == w_node )
     {
-        fprintf( stderr, "%s: %s\n", __func__, aff_writer_errstr( w ) );
-        goto err_clean_rw;
+        fprintf( stderr, "%s: %s: %s\n", __func__, key_path, aff_writer_errstr( w ) );
+        goto err_clean_w;
     }
-    if( affNodeVoid != aff_node_type( w_node ) )
+    if( aff_writer_root( w ) == w_node )
     {
-        fprintf( stderr, "%s: non-void node type in %s\n", __func__, key_path );
-        goto err_clean_rw;
+        fprintf( stderr, "%s: cannot put data to the root node\n", __func__ );
+        goto err_clean_w;
     }
     if( NULL != ( status = insert_list( w, w_node, type, num ) ) )
     {
         fprintf( stderr, "%s: %s\n", __func__, status );
-        goto err_clean_rw;
+        goto err_clean_w;
     }
-    
-    /**/fprintf( stderr, "%s: written file %s\n", __func__, tmp_fname );
-    if( NULL == out_fname )
+    struct AffReader_s *r;
+    if( !start_empty )
     {
-        if( rename( tmp_fname, fname ) )
-        {
-            perror( __func__ );
-            fprintf( stderr, "%s: output is saved to %s\n", __func__, tmp_fname );
-            return 1;
+        r = aff_reader( fname );
+        if( NULL != ( status = aff_reader_errstr( r ) ) )
+        {        
+            fprintf( stderr, "%s: %s: %s\n", __func__, fname, aff_reader_errstr( r ) );
+            goto err_clean_rw;
         }
+        struct AffNode_s *r_root = aff_reader_root( r );
+        if( NULL == r_root )
+        {
+            fprintf( stderr, "%s: %s\n", __func__, aff_reader_errstr( r ) );
+            goto err_clean_rw;
+        }
+        // copy all nodes
+        struct copy_nodes_arg arg;
+        arg.r = r;
+        arg.w = w;
+        arg.w_parent = w_root;
+        arg.weak = COPY_NODE_WEAK;
+        arg.errstr = NULL;
+        aff_node_foreach( r_root, copy_nodes_recursive, (void *)&arg );
+        if( NULL != arg.errstr )
+        {
+            fprintf( stderr, "%s: %s\n", __func__, arg.errstr );
+            goto err_clean_rw;
+        }
+        aff_reader_close( r );
     }
-    aff_writer_close( w ); 
-    aff_reader_close( r );
+    if( NULL != ( status = aff_writer_close( w ) ) )
+    {
+        fprintf( stderr, "%s: %s\n", __func__, status );
+        if( remove( tmp_fname ) )
+            perror( __func__ );
+        free( tmp_fname );
+        return 1;
+    }
+    if( rename( tmp_fname, out_fname ) )
+    {
+        perror( __func__ );
+        fprintf( stderr, "%s: output is saved to %s\n", __func__, tmp_fname );
+        return 1;
+    }
     free( tmp_fname );
     return 0;
     
-err_clean_r:
-    aff_reader_close( r );
-    return 1;
-    
 err_clean_rw:
-    aff_writer_close( w ); 
     aff_reader_close( r ); 
+err_clean_w:
+    aff_writer_close( w ); 
     if( remove( tmp_fname ) )
         perror( __func__ );
     free( tmp_fname );
@@ -439,14 +380,16 @@ err_clean_rw:
 
 void h_import(void)
 {
-    printf( "Usage:\nlhpc-aff import -[cidx] [-N <N>] [-o <output>] <aff-file> [key-path]\n"
+    printf( "Usage:\nlhpc-aff import -[cidx] [-N <N>] [-o <output>] {-e|<aff-file>} [key-path]\n"
             "Import blank-separated data from standard input to <aff-file> under key-path.\n"
             "If no output file name given, rewrite the original file.\n"
+            "New data replaces the old data."
             "\t-c\tchar array input\n"  
             "\t-i\tinteger array input\n"
             "\t-d\tdouble precision real number array input\n"
             "\t-x\tdouble precision complex number array input\n"
-            "\t-N <N>\tarray of length N\n"
+            "\t-N <N>\tarray of length N (default N=1)\n"
             "\t-o <output>\n\t\toutput to file `name'\n"
+            "\t-e\tstart with an empty aff file\n"
             );
 }

@@ -12,10 +12,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <complex.h>
+#include "common.h"
 
 const char *copy_node( struct AffReader_s *r, struct AffNode_s *r_node, 
         struct AffWriter_s *w, struct AffNode_s *w_parent, 
-        struct AffNode_s **w_new )
+        struct AffNode_s **w_new, int weak )
 {
     if( NULL == r_node ||
         NULL == r || 
@@ -36,16 +37,45 @@ const char *copy_node( struct AffReader_s *r, struct AffNode_s *r_node,
         return aff_writer_errstr( w );
     if( NULL != w_new )
         *w_new = w_node;
-    
+    return copy_node_data( r, r_node, w, w_node, weak );
+}
+
+/* 
+   if weak==0, return error on existing non-void node;
+   if weak==1, ..., do not return error, print warning;
+   otherwise, ..., return no error
+ */
+const char *copy_node_data( struct AffReader_s *r, struct AffNode_s *r_node, 
+        struct AffWriter_s *w, struct AffNode_s *w_node, int weak )
+{
     size_t size = aff_node_size( r_node );
+    switch( aff_node_type( w_node ) )
+    {
+    case affNodeVoid: break;
+    case affNodeInvalid:    
+        return "copy_node_data: aff_node_type returned AffNodeInvalid";
+    default:
+        switch( weak )
+        {
+        case COPY_NODE_STRONG:
+            return "copy_node_data: node has data already";
+        case COPY_NODE_WEAK:
+            fprintf( stderr, "%s: data in the node ", __func__ );
+            fprint_path( stderr, aff_writer_root( w ), w_node );
+            fprintf( stderr, " changed\n" );
+            return NULL;
+        default:
+            return NULL;
+        }
+    }
     switch( aff_node_type( r_node ) )
     {
-    case affNodeInvalid: return "copy_nodes: aff_node_type returned AffNodeInvalid";
+    case affNodeInvalid: return "copy_node_data: aff_node_type returned AffNodeInvalid";
     case affNodeVoid: break;
     case affNodeChar: {
             char *ptr = (char *)malloc( size );
             if( NULL == ptr )
-                return "copy_nodes: not enough memory";
+                return "copy_node_data: not enough memory";
             if( aff_node_get_char( r, r_node, ptr, size ) )
                 return aff_reader_errstr( r );
             if( aff_node_put_char( w, w_node, ptr, size ) )
@@ -55,7 +85,7 @@ const char *copy_node( struct AffReader_s *r, struct AffNode_s *r_node,
     case affNodeInt: {
             uint32_t *ptr = (uint32_t *)malloc( size * sizeof(uint32_t) );
             if( NULL == ptr )
-                return "copy_nodes: not enough memory";
+                return "copy_node_data: not enough memory";
             if( aff_node_get_int( r, r_node, ptr, size ) )
                 return aff_reader_errstr( r );
             if( aff_node_put_int( w, w_node, ptr, size ) )
@@ -65,7 +95,7 @@ const char *copy_node( struct AffReader_s *r, struct AffNode_s *r_node,
     case affNodeDouble: {
             double *ptr = (double *)malloc( size * sizeof(double) );
             if( NULL == ptr )
-                return "copy_nodes: not enough memory";
+                return "copy_node_data: not enough memory";
             if( aff_node_get_double( r, r_node, ptr, size ) )
                 return aff_reader_errstr( r );
             if( aff_node_put_double( w, w_node, ptr, size ) )
@@ -76,7 +106,7 @@ const char *copy_node( struct AffReader_s *r, struct AffNode_s *r_node,
             double _Complex *ptr = (double _Complex *)
                 malloc( size * sizeof(double _Complex) );
             if( NULL == ptr )
-                return "copy_nodes: not enough memory";
+                return "copy_node_data: not enough memory";
             if( aff_node_get_complex( r, r_node, ptr, size ) )
                 return aff_reader_errstr( r );
             if( aff_node_put_complex( w, w_node, ptr, size ) )
@@ -84,16 +114,8 @@ const char *copy_node( struct AffReader_s *r, struct AffNode_s *r_node,
             free( ptr );
         } break;
     }
-    return NULL;    
+    return NULL;
 }
-
-struct copy_nodes_arg
-{
-    struct AffReader_s  *r;
-    struct AffWriter_s  *w;
-    struct AffNode_s    *w_parent;
-    const char          *errstr;
-};
 
 void copy_nodes_recursive( struct AffNode_s *r_node, void *arg_ )
 {
@@ -102,7 +124,8 @@ void copy_nodes_recursive( struct AffNode_s *r_node, void *arg_ )
         return;
     
     struct AffNode_s *w_node;
-    const char *status = copy_node( arg->r, r_node, arg->w, arg->w_parent, &w_node );
+    const char *status = copy_node( arg->r, r_node, arg->w, 
+            arg->w_parent, &w_node, arg->weak );
     if( NULL != status )
     {
         arg->errstr = status;
@@ -118,6 +141,7 @@ void copy_nodes_recursive( struct AffNode_s *r_node, void *arg_ )
     new_arg.r = arg->r;
     new_arg.w = arg->w;
     new_arg.w_parent = w_node;
+    new_arg.weak = arg->weak;
     new_arg.errstr = NULL;
     
     aff_node_foreach( r_node, copy_nodes_recursive, (void *)&new_arg );

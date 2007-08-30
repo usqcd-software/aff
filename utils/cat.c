@@ -22,7 +22,8 @@
 #include "util.h"
 #include "common.h"
 
-int gnuplot_spacing = 0,
+static int 
+    gnuplot_spacing = 0,
     print_comment_line = 0,
     print_index = 0,
     print_all_subnodes = 0,
@@ -224,9 +225,32 @@ int x_cat( int argc, char *argv[] )
         goto errclean_r;
     }
     
-    int first = 1;
     // TODO print root for empty key list
-    for( ; argc ; --argc, ++argv, first = 0 )
+    struct cat_node_arg arg;
+    arg.r = r;
+    arg.first = 1;
+    arg.errstr = NULL;
+    if( 0 == argc )
+    {
+        struct AffNode_s *r_node = aff_reader_root( r );
+        if( NULL == r_node )
+        {
+            fprintf( stderr, "%s: %s\n", __func__, aff_reader_errstr( r ) );
+            goto errclean_r;
+        }
+        if( print_recursive )
+            cat_nodes_recursive( r_node, &arg );
+        else if( print_all_subnodes )
+            aff_node_foreach( r_node, cat_single_node, &arg );
+        else
+            cat_single_node( r_node, &arg );
+        if( NULL != arg.errstr )
+        {
+            fprintf( stderr, "%s: %s", __func__, arg.errstr );
+            return 1;
+        }
+    }
+    for( ; argc ; --argc, ++argv )
     {
         struct AffNode_s *r_node = chdir_path( r, r_root, *argv );
         if( NULL == r_node )
@@ -234,10 +258,6 @@ int x_cat( int argc, char *argv[] )
             fprintf( stderr, "%s: %s\n", __func__, aff_reader_errstr( r ) );
             goto errclean_r;
         }
-        struct cat_node_arg arg;
-        arg.r = r;
-        arg.first = first;
-        arg.errstr = NULL;
         if( print_recursive )
             cat_nodes_recursive( r_node, &arg );
         else if( print_all_subnodes )
@@ -254,7 +274,7 @@ int x_cat( int argc, char *argv[] )
     aff_reader_close( r );
     return 0;
 
-    errclean_r:
+errclean_r:
     aff_reader_close( r );
     return 1;
 }
@@ -262,8 +282,9 @@ int x_cat( int argc, char *argv[] )
 void h_cat(void)
 {
     printf( "Usage:\n"
-            "lhpc-aff cat [-acgnR] <aff-file> <keypath> ...\n"
-            "Print the data associated with keypath in the file aff-file\n" 
+            "lhpc-aff cat [-acgnR] <aff-file> [<keypath>] ...\n"
+            "Print the data associated with keypath in the file aff-file.\n"
+            "If no keypath given, start from the root node\n"
             "\t-a\tprint data of all immediate subkeys instead of given keypath itself\n"
             "\t-c\tprint a comment line starting with #\n" 
             "\t-g\tput gnuplot-style double new-line separators between data\n"
