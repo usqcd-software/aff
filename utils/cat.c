@@ -61,9 +61,9 @@ void cat_single_node( struct AffNode_s *r_node, void *arg_ )
         return;
     if( !arg->first && gnuplot_spacing )
         printf( "\n\n" );
+    arg->first = 0;
     if( print_comment_line )
     {
-        arg->first = 0;
         printf( "# " ); 
         const char *type_str = NULL;
         switch( aff_node_type( r_node ) )

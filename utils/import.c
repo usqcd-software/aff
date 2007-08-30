@@ -45,7 +45,7 @@ int read_nonspace( char *buf, size_t max, FILE *fi )
         *(buf++) = c;
     }
     *buf = '\0';
-    return max - k - 1;
+    return max - k ;
 }
 
 static
