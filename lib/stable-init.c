@@ -17,7 +17,6 @@ aff_stable_init(void)
 	return 0;
     }
     st->size = 0;
-    st->file_size = 0;
     st->last_block = &st->block;
     aff_stable_iblock(&st->block, 0);
 

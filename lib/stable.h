@@ -5,8 +5,6 @@
  *  insert() makes a copy of the name.
  *  lookup() returns NULL if the name is not found.
  *  index() returns NULL if index is out of range.
- *  size() returns the largest valid index in the table.
- *  file_size() returns the number of bytes it takes to store the table.
  *  for_each() goes through indices in order and is exposed for uniformity.
  *
  * Symbol ids are assigned sequentially starting from 0.

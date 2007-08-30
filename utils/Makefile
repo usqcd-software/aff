@@ -31,7 +31,7 @@ lib:
 	make -C ../lib
 
 $(program): $(sources:%.c=%.o)
-	$(CC) $(CFLAGS) -static -I../lib -o $@ $^ -L../lib -llhpc-aff -lm
+	$(CC) $(CFLAGS) -I../lib -o $@ $^ -L../lib -llhpc-aff -lm
 
 $(sources:%.c=%.o): %.o: %.c
 	$(CC) $(CFLAGS) -I../lib -c -o $@ $<

@@ -19,7 +19,6 @@ struct Block_s {
 struct AffSTable_s {
     struct AffTreap_s *treap;
     uint32_t           size;
-    uint64_t           file_size;
     struct Block_s     block;
     struct Block_s    *last_block;
 };

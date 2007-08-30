@@ -20,7 +20,7 @@
 #include "common.h"
 
 static
-int read_nonspace( unsigned char *buf, size_t max, FILE *fi )
+int read_nonspace( char *buf, size_t max, FILE *fi )
 {
     if( 0 == max )
         return 0;
@@ -49,13 +49,13 @@ int read_nonspace( unsigned char *buf, size_t max, FILE *fi )
 }
 
 static
-int read_char_list( unsigned char *buf, size_t max, FILE *fi )
+int read_char_list( char *buf, size_t max, FILE *fi )
 {
     return fread( buf, 1, max, fi );
 }
 
 static
-int read_int_list( int32_t *buf, size_t max, FILE *fi )
+int read_int_list( uint32_t *buf, size_t max, FILE *fi )
 {
     size_t cnt = max;
     while( cnt-- )
@@ -152,7 +152,7 @@ const char *insert_list( struct AffWriter_s *w, struct AffNode_s *w_node,
         break;
     case affNodeChar: 
         {
-            unsigned char *buf = (char *)malloc( size );
+            char *buf = malloc( size );
             if( NULL == buf )
                 return "insert_list: not enough memory\n";
             read_char_list( buf, size, stdin );

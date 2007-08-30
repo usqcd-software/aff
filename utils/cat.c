@@ -49,7 +49,7 @@ void cat_single_node( struct AffNode_s *r_node, void *arg_ )
     if( NULL != arg->errstr )
         return;
     struct AffReader_s *r = arg->r;
-    size_t size = aff_node_size( r_node );
+    uint32_t size = aff_node_size( r_node );
     enum AffNodeType_e type = aff_node_type( r_node );
     
     if( affNodeInvalid == type )
@@ -79,7 +79,7 @@ void cat_single_node( struct AffNode_s *r_node, void *arg_ )
         case affNodeDouble:     type_str = "double";    break;
         case affNodeComplex:    type_str = "complex";   break;
         }
-        printf( "%s[%d]  ", type_str, size );
+        printf( "%s[%d]  ", type_str, (int)size );
         print_path( aff_reader_root( r ), r_node );
         printf( "\n" );
     }
