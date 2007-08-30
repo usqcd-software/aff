@@ -187,10 +187,3 @@ void h_extract(void)
             "\t-a\textract all the subkeys, instead of the keypath itself\n" 
             "\t-e\tmake each file empty\n" );
 }
-void h_copy(void)
-{
-    printf( "Usage:\n" 
-            "lhpc-aff copy <aff-input> <aff-output> [<in-key1> <out-key1>] ...\n"
-            "Copy keypath from one aff file to another; swiss army knife\n" );
-
-}

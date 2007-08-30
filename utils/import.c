@@ -153,6 +153,8 @@ const char *insert_list( struct AffWriter_s *w, struct AffNode_s *w_node,
     case affNodeChar: 
         {
             unsigned char *buf = (char *)malloc( size );
+            if( NULL == buf )
+                return "insert_list: not enough memory\n";
             read_char_list( buf, size, stdin );
             status = aff_node_put_char( w, w_node, buf, size );
             free( buf );
@@ -162,6 +164,8 @@ const char *insert_list( struct AffWriter_s *w, struct AffNode_s *w_node,
     case affNodeInt:
         {
             uint32_t *buf = (uint32_t *)malloc( size * sizeof(uint32_t) );
+            if( NULL == buf )
+                return "insert_list: not enough memory\n";
             read_int_list( buf, size, stdin );
             status = aff_node_put_int( w, w_node, buf, size );
             free( buf );
@@ -181,6 +185,8 @@ const char *insert_list( struct AffWriter_s *w, struct AffNode_s *w_node,
         {
             double _Complex *buf = (double _Complex *)
                 malloc( size * sizeof(double _Complex) );
+            if( NULL == buf )
+                return "insert_list: not enough memory\n";
             read_complex_list( buf, size, stdin );
             status = aff_node_put_complex( w, w_node, buf, size );
             free( buf );
