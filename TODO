@@ -5,8 +5,8 @@
 [done] - Restrict node names to an XML-compatible subset (in waff-mkdir).
 [done] - Add node name checks into lhpc-aff check.
 - Utilities
--- extract
--- join
+[done] -- extract
+[done] -- join -- 'insert' instead of 'join'
 -- xml
 -- spectrum
 -- 3point
