@@ -182,8 +182,6 @@ do_ls(struct AffReader_s *r, const char *name, const char *kp)
     struct AffNode_s *node;
     struct arg arg;
     
-    /* XXX */
-    printf("do_ls(%s)\n", p);
     for (node = root, p = strtok(p, "/"); p; p = strtok(NULL, "/")) {
 	node = aff_reader_chdir(r, node, p);
 	if (node == 0) {
