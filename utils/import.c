@@ -175,6 +175,8 @@ const char *insert_list( struct AffWriter_s *w, struct AffNode_s *w_node,
     case affNodeDouble:
         {
             double *buf = (double *)malloc( size * sizeof(double) );
+            if( NULL == buf )
+                return "insert_list: not enough memory\n";
             read_double_list( buf, size, stdin );
             status = aff_node_put_double( w, w_node, buf, size );
             free( buf );
