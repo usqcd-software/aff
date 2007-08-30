@@ -389,7 +389,7 @@ void h_import(void)
     printf( "Usage:\nlhpc-aff import -[cidx] [-N <N>] [-o <output>] {-e|<aff-file>} [key-path]\n"
             "Import blank-separated data from standard input to <aff-file> under key-path.\n"
             "If no output file name given, rewrite the original file.\n"
-            "New data replaces the old data."
+            "New data replaces the old data.\n"
             "\t-c\tchar array input\n"  
             "\t-i\tinteger array input\n"
             "\t-d\tdouble precision real number array input\n"
