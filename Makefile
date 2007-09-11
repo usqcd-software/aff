@@ -34,7 +34,7 @@ realclean:
 	done
 	$(RM) lhpc-aff-config
 
-do.install: lhpc-aff-config docs/aff_spec.pdf
+do.install: lhpc-aff-config docs/aff_spec.pdf COPYRIGHT
 	mkdir -p $(prefix_bin)
 	$(RM) $(prefix_bin)/lhpc-aff-config
 	cp lhpc-aff-config $(prefix_bin)/lhpc-aff-config
@@ -51,9 +51,12 @@ do.install: lhpc-aff-config docs/aff_spec.pdf
 	cp lib/lhpc-aff.h $(prefix_include)/lhpc-aff.h
 	chmod 444 $(prefix_include)/lhpc-aff.h
 	mkdir -p $(prefix_doc)
-	$(RM) $(prefix_doc)/aff_spec.pdf
-	cp docs/aff_spec.pdf $(prefix_doc)/aff_spec.pdf
-	chmod 444 $(prefix_doc)/aff_spec.pdf
+	for f in docs/aff_spec.pdf COPYRIGHT; do \
+	   bf=`basename $$f`; \
+	   $(RM) $(prefix_doc)/$$bf; \
+	   cp $f $(prefix_doc)/$$bf; \
+	   chmod 444 $(prefix_doc)/$$bf; \
+	done
 
 lhpc-aff-config: Makefile $(CONFIG) aff-config.in
 	sed -e 's?@CC@?$(install.CC)?' \

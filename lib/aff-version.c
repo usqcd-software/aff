@@ -9,5 +9,5 @@
 const char *
 aff_version(void)
 {
-    return "LHPC AFF v.x.x.x $Revision$ $Date$";
+    return "LHPC AFF v.1.0.0 $Revision$ $Date$";
 }
