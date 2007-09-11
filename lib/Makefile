@@ -1,6 +1,8 @@
 # This is a temporary makefile. It should be replaced when configure is set up.
 CC = gcc -std=c99 -DHAS_INTEGRAL_OFF_T
 CFLAGS = -g -Wall
+AR = ar
+RANLIB = ranlib
 prefix = .
 library = liblhpc-aff.a
 interface = lhpc-aff.h
@@ -129,7 +131,7 @@ realclean: clean
 	$(RM) $(library) $(interface)
 
 install:
-	echo "Install is not implemented yet"
+	echo "Run install in the top directory"
 	exit 1
 
 $(interface): $(interface.parts) interface.prologue interface.epilogue
@@ -143,8 +145,8 @@ $(interface): $(interface.parts) interface.prologue interface.epilogue
 $(interface): Makefile
 
 $(library): $(sources:%.c=%.o)
-	ar cr $(library) $(sources:%.c=%.o)
-	ranlib $(library)
+	$(AR) cr $(library) $(sources:%.c=%.o)
+	$(RANLIB) $(library)
 
 $(sources:%.c=%.o): %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
