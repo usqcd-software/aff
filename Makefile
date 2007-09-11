@@ -54,7 +54,7 @@ do.install: lhpc-aff-config docs/aff_spec.pdf COPYRIGHT
 	for f in docs/aff_spec.pdf COPYRIGHT; do \
 	   bf=`basename $$f`; \
 	   $(RM) $(prefix_doc)/$$bf; \
-	   cp $f $(prefix_doc)/$$bf; \
+	   cp $$f $(prefix_doc)/$$bf; \
 	   chmod 444 $(prefix_doc)/$$bf; \
 	done
 
