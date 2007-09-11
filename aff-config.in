@@ -1,4 +1,6 @@
 #!/bin/sh -f
+#
+# 2007/09/11 avp -- funal cut for v 1.0.0
 cc='@CC@'
 cflags='@CFLAGS@ -I@prefix_include@'
 libs='@LIBS@ -llhpc-aff'

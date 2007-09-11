@@ -18,7 +18,11 @@ else
 include $(CONFIG)
 all:
 	for d in $(subdirs); do \
-	  make CC='$(CC)' CFLAGS='$(CFLAGS)' -C $$d $@; \
+	  make CC='$(CC)' \
+               CFLAGS='$(CFLAGS)' \
+               AR='$(AR)' \
+               RANLIB='$(RANLIB)' \
+               -C $$d $@; \
 	done
 install: all do.install
 endif

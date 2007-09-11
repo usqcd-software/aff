@@ -5,6 +5,7 @@
 /* This file should be modified with each release to make SVN change the Id
  *
  * 2007/08/21 avp -- working version, playing with format
+ * 2007/09/11 avp -- final cut for v 1.0.0
  */
 const char *
 aff_version(void)
