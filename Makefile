@@ -1,7 +1,7 @@
 # This is a main Makefile for the AFF library and utilities.
 #
 CONFIG=config.none
-subdirs=lib utils docs
+subdirs=lib utils
 
 prefix=/usr/local
 prefix_lib=$(prefix)/lib
@@ -34,7 +34,7 @@ realclean:
 	done
 	$(RM) lhpc-aff-config
 
-do.install: lhpc-aff-config
+do.install: lhpc-aff-config docs/aff_spec.pdf
 	mkdir -p $(prefix_bin)
 	$(RM) $(prefix_bin)/lhpc-aff-config
 	cp lhpc-aff-config $(prefix_bin)/lhpc-aff-config
@@ -55,7 +55,7 @@ do.install: lhpc-aff-config
 	cp docs/aff_spec.pdf $(prefix_doc)/aff_spec.pdf
 	chmod 444 $(prefix_doc)/aff_spec.pdf
 
-lhpc-aff-config: Makefile Make.config aff-config.in
+lhpc-aff-config: Makefile $(CONFIG) aff-config.in
 	sed -e 's?@CC@?$(install.CC)?' \
             -e 's?@CFLAGS@?$(install.CFLAGS)?' \
             -e 's?@LIBS@?$(install.LIBS)?' \
