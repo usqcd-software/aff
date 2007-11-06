@@ -84,8 +84,6 @@ const char *extract_data( struct AffReader_s *r, const char *fname,
         if( NULL != ( status = arg.errstr ) ) 
             goto errclean_rw;
         aff_reader_close( r_old );
-        if( NULL != arg.errstr )
-            return arg.errstr;
     }
     
     if( NULL != ( status = aff_writer_close( w ) ) )
@@ -95,6 +93,8 @@ const char *extract_data( struct AffReader_s *r, const char *fname,
         {
             status = strerror( errno );
             perror( __func__ );
+            fprintf( stderr, "%s: output saved to %s", __func__, tmp_fname );
+            free( tmp_fname );
             return status;
         }
     free( tmp_fname );

@@ -14,8 +14,15 @@ ifeq "$(wildcard $(CONFIG))" ""
 all install:
 	@echo "configuration $(CONFIG) not found"
 	@exit 1
+
+export CONFIG
 else
 include $(CONFIG)
+	
+#you can transfer all the parameters to sub-make with preceding directive
+# export VAR1 VAR2 ...
+## Sergey Syritsyn 11/6/2007
+export CONFIG CC CFLAGS AR RANLIB
 all:
 	for d in $(subdirs); do \
 	  make CC='$(CC)' \

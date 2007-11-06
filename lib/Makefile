@@ -1,9 +1,8 @@
-# This is a temporary makefile. It should be replaced when configure is set up.
-CC = gcc -std=c99 -DHAS_INTEGRAL_OFF_T
-CFLAGS = -g -Wall
-AR = ar
-RANLIB = ranlib
-prefix = .
+CONFIG	= config.none
+TOP	= ..#
+.PHONY: all clean realclean install
+
+
 library = liblhpc-aff.a
 interface = lhpc-aff.h
 
@@ -120,15 +119,17 @@ io.headers = io.h
 
 interface.parts = aff.h node.h tree.h stable.h treap.h md5.h coding.h
 
-.PHONY: all clean realclean install
+
+ifeq "$(wildcard $(TOP)/$(CONFIG))" ""
+all install:
+	@echo "configuration $(CONFIG) not found"
+	@exit 1
+
+else
+include $(TOP)/$(CONFIG)
 
 all: $(library) $(interface)
 
-clean:
-	$(RM) $(sources:%.c=%.o)
-
-realclean: clean
-	$(RM) $(library) $(interface)
 
 install:
 	echo "Run install in the top directory"
@@ -159,3 +160,11 @@ $(md5.sources:%.c=%.o): $(md5.headers)
 $(aff.sources:%.c=%.o): $(aff.headers) md5.h tree.h stable.h coding.h io.h
 $(coding.sources:%.c=%.o): $(coding.headers) node.h
 $io.sources:%.c=%.o): $(io.headers)
+
+endif
+
+clean:
+	$(RM) $(sources:%.c=%.o)
+
+realclean: clean
+	$(RM) $(library) $(interface)

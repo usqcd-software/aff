@@ -1,6 +1,5 @@
-CC = gcc -std=c99
-CFLAGS = -Wall -g
-
+CONFIG	= config.none
+TOP	= ..#
 .PHONY: all clean realclean lib
 
 program = lhpc-aff
@@ -19,13 +18,16 @@ sources = lhpc-aff.c \
 	  copy_nodes.c \
 	  common.c
 
+
+ifeq "$(wildcard $(TOP)/$(CONFIG))" ""
+all install:
+	@echo "configuration $(CONFIG) not found"
+	@exit 1
+
+else
+include $(TOP)/$(CONFIG)
+
 all: $(program)
-
-clean:
-	$(RM) $(sources:%.c=%.o)
-
-realclean: clean
-	$(RM) $(program)
 
 lib:
 	make -C ../lib
@@ -37,3 +39,12 @@ $(sources:%.c=%.o): %.o: %.c
 	$(CC) $(CFLAGS) -I../lib -c -o $@ $<
 
 $(sources:%.c=%.o): $(headers)
+
+endif
+
+clean:
+	$(RM) $(sources:%.c=%.o)
+
+realclean: clean
+	$(RM) $(program)
+

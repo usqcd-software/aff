@@ -144,6 +144,7 @@ int x_insert( int argc, char *argv[] )
     {
         perror( __func__ );
         fprintf( stderr, "%s: output is saved to %s\n", __func__, tmp_fname );
+        free( tmp_fname );
         return 1;
     }
     free( tmp_fname );
