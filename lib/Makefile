@@ -159,7 +159,7 @@ $(tree.sources:%.c=%.o): $(tree.headers) treap.h stable.h node.h node-i.h
 $(md5.sources:%.c=%.o): $(md5.headers)
 $(aff.sources:%.c=%.o): $(aff.headers) md5.h tree.h stable.h coding.h io.h
 $(coding.sources:%.c=%.o): $(coding.headers) node.h
-$io.sources:%.c=%.o): $(io.headers)
+$(io.sources:%.c=%.o): $(io.headers)
 
 endif
 
