@@ -40,4 +40,5 @@ void copy_nodes_recursive( struct AffNode_s *r_node, void *arg_ );
 void print_path( struct AffNode_s *root, struct AffNode_s *node );
 void fprint_path( FILE *stream, struct AffNode_s *root, struct AffNode_s *node );
 char *mk_tmp_filename( const char *mark, const char *fname );
+int split_farg( char *buf, int fargc, char ** fargv );
 #endif/*UTIL_COMMON_H_*/

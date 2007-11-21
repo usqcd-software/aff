@@ -75,20 +75,46 @@ short_list(struct AffNode_s *node, void *ptr)
     printf("  %-15s %s\n", buffer, name);
 }
 
+enum affNodeTypeMask {
+    affNodeVoidMask = 0x1,
+    affNodeCharMask = 0x2,
+    affNodeIntMask  = 0x4,
+    affNodeDoubleMask   = 0x8,
+    affNodeComplexMask  = 0x10
+};
+#define aff_ls_mask_all (affNodeVoidMask | affNodeCharMask |\
+                        affNodeIntMask | affNodeDoubleMask |\
+                        affNodeComplexMask)
+enum affNodeTypeMask aff_ls_mask = aff_ls_mask_all;
+
 static void
 do_node(struct AffNode_s *node, void *ptr)
 {
     struct arg *arg = ptr;
     enum AffNodeType_e type = aff_node_type(node);
     uint32_t size = aff_node_size(node);
+    enum affNodeTypeMask node_mask;
 
     if (node == arg->root)
 	printf("/");
     else {
 	print_path(arg->fname, arg->kpath, arg->root, node);
     }
+    switch(type)
+    {
+    case affNodeVoid:   node_mask = affNodeVoidMask;    break;
+    case affNodeChar:   node_mask = affNodeCharMask;    break;
+    case affNodeInt:    node_mask = affNodeIntMask;     break;
+    case affNodeDouble: node_mask = affNodeDoubleMask;  break;
+    case affNodeComplex:node_mask = affNodeComplexMask; break;
+    default:
+        fprintf(stderr, "lhpc-aff: Internal error: uknown node type %d\n",
+                type);
+        exit(1);
+    }
     printf(":  %s[%d]\n", type_name(type), size);
-    if (long_format) {
+    if (long_format && (node_mask & aff_ls_mask) )
+    {
 	switch (type) {
 	case affNodeVoid:
 	    break;
@@ -202,12 +228,23 @@ do_ls(struct AffReader_s *r, const char *name, const char *kp)
 void
 h_ls(void)
 {
-    printf("lphc-aff ls [-lR] aff-file key-path ...\n"
-	   "\tlist the contents of AFF file starting at each key-path.\n"
-	   "\tKey path components are separated by /, as in UNIX paths.\n"
-	   "\tIf -l is given, show data in each component\n"
-	   "\tIf -R is given, descent recursively\n");
+    printf("lphc-aff ls [-lR] [-aAvVcCiIdDxX] aff-file key-path ...\n"
+	   "List the contents of AFF file starting at each key-path.\n"
+	   "Key path components are separated by /, as in UNIX paths.\n"
+	   "\t-l\tshow data in each component\n"
+	   "\t-R\tdescent recursively\n"
+           "\t-a(A)\t(do not) print data on nodes of all types; -a is default\n"
+           "\t-v(V)\t(do not) print data on void nodes\n"
+           "\t-c(C)\t(do not) print data on char nodes\n"
+           "\t-i(I)\t(do not) print data on int nodes\n"
+           "\t-d(D)\t(do not) print data on double nodes\n"
+           "\t-x(X)\t(do not) print data on complex nodes\n"
+           "\t\tamong [aAvVcCiIdDxX] options, the last always takes precedence\n"
+           );
 }
+
+
+
 
 int
 x_ls(int argc, char *argv[])
@@ -230,6 +267,18 @@ x_ls(int argc, char *argv[])
 	    switch (*p) {
 	    case 'l': long_format = 1; break;
 	    case 'R': recursive = 1; break;
+	    case 'a': aff_ls_mask = aff_ls_mask_all; break;
+	    case 'A': aff_ls_mask = 0; break;
+            case 'v': aff_ls_mask = aff_ls_mask | affNodeVoidMask;      break;
+            case 'c': aff_ls_mask = aff_ls_mask | affNodeCharMask;      break;
+            case 'i': aff_ls_mask = aff_ls_mask | affNodeIntMask;       break;
+            case 'd': aff_ls_mask = aff_ls_mask | affNodeDoubleMask;    break;
+            case 'x': aff_ls_mask = aff_ls_mask | affNodeComplexMask;   break;
+            case 'V': aff_ls_mask = aff_ls_mask & ~affNodeVoidMask;     break;
+            case 'C': aff_ls_mask = aff_ls_mask & ~affNodeCharMask;     break;
+            case 'I': aff_ls_mask = aff_ls_mask & ~affNodeIntMask;      break;
+            case 'D': aff_ls_mask = aff_ls_mask & ~affNodeDoubleMask;   break;
+            case 'X': aff_ls_mask = aff_ls_mask & ~affNodeComplexMask;  break;
 	    default: goto error;
 	    }
 	}

@@ -228,6 +228,7 @@ int x_import( int argc, char *argv[] )
             case 'i': type = affNodeInt       ; break;
             case 'd': type = affNodeDouble    ; break;
             case 'x': type = affNodeComplex   ; break;
+            case 'v': type = affNodeVoid      ; break;
             case 'N': 
                 {
                     if( '\0' != *(p+1) || !(--argc) )
@@ -261,7 +262,6 @@ int x_import( int argc, char *argv[] )
                 }
             }
         }
-        
     }
     
     if( !start_empty )
@@ -319,7 +319,7 @@ int x_import( int argc, char *argv[] )
         fprintf( stderr, "%s: %s: %s\n", __func__, key_path, aff_writer_errstr( w ) );
         goto err_clean_w;
     }
-    if( aff_writer_root( w ) == w_node )
+    if( affNodeVoid != type && aff_writer_root( w ) == w_node )
     {
         fprintf( stderr, "%s: cannot put data to the root node\n", __func__ );
         goto err_clean_w;
@@ -393,12 +393,13 @@ void h_import(void)
             "Import blank-separated data from standard input to <aff-file> under key-path.\n"
             "If no output file name given, rewrite the original file.\n"
             "New data replaces the old data.\n"
+            "\t-v\tvoid input; useful to create a new empty aff-file\n"
             "\t-c\tchar array input\n"  
             "\t-i\tinteger array input\n"
             "\t-d\tdouble precision real number array input\n"
             "\t-x\tdouble precision complex number array input\n"
             "\t-N <N>\tarray of length N (default N=1)\n"
-            "\t-o <output>\n\t\toutput to file `name'\n"
+            "\t-o <output>\n\t\twrite result of import to <output>\n"
             "\t-e\tstart with an empty aff file\n"
             );
 }

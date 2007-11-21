@@ -60,9 +60,9 @@ const char *copy_node_data( struct AffReader_s *r, struct AffNode_s *r_node,
         case COPY_NODE_STRONG:
             return "copy_node_data: node has data already";
         case COPY_NODE_WEAK:
-            fprintf( stderr, "%s: data in the node ", __func__ );
+            fprintf( stderr, "%s: data change in node ", __func__ );
             fprint_path( stderr, aff_writer_root( w ), w_node );
-            fprintf( stderr, " changed\n" );
+            fprintf( stderr, "\n" );
             return NULL;
         default:
             return NULL;

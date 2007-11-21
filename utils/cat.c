@@ -27,7 +27,8 @@ static int
     print_comment_line = 0,
     print_index = 0,
     print_all_subnodes = 0,
-    print_recursive = 0;
+    print_recursive = 0,
+    print_end_mark = 0;
 
 struct cat_node_arg
 {
@@ -159,6 +160,8 @@ void cat_single_node( struct AffNode_s *r_node, void *arg_ )
             free( buf );
         } break;
     }
+    if( print_end_mark )
+        printf( "#AFF:END\n" );
 }
 
 void cat_nodes_recursive( struct AffNode_s *r_node, void *arg_ )
@@ -173,14 +176,92 @@ void cat_nodes_recursive( struct AffNode_s *r_node, void *arg_ )
     aff_node_foreach( r_node, cat_nodes_recursive, arg_ );
 }
 
+int cat_keypath( struct AffReader_s *r, const char *keypath, 
+        struct cat_node_arg *arg )
+{
+    struct AffNode_s *r_root = aff_reader_root( r );
+    if( NULL == r_root )
+    {
+        fprintf( stderr, "%s: %s\n", __func__, aff_reader_errstr( r ) );
+        return 1;
+    }
+    struct AffNode_s *r_node = chdir_path( r, r_root, keypath );
+    if( NULL == r_node )
+    {
+        fprintf( stderr, "%s: %s\n", __func__, aff_reader_errstr( r ) );
+        return 1;
+    }
+    
+    if( print_recursive )
+        cat_nodes_recursive( r_node, arg );
+    else if( print_all_subnodes )
+        aff_node_foreach( r_node, cat_single_node, arg );
+    else
+        cat_single_node( r_node, arg );
+    if( NULL != arg->errstr )
+    {
+        fprintf( stderr, "%s: %s", __func__, arg->errstr );
+        return 1;
+    }
+    return 0;
+}
+
+char *get_next_key( char *buf, size_t bufsize, FILE *stream )
+{
+    char *key = fgets( buf, bufsize, stream );
+    if( NULL == key )
+        return NULL;
+    size_t len = strlen( key );
+    if( 0 < len && '\n' == key[len-1] )
+        key[len-1] = '\0';
+    return key;
+}
+
+int cat_keylist( struct AffReader_s *r, const char *list_fname, 
+        struct cat_node_arg *arg )
+{
+    FILE *list = NULL;
+    if( 0 == strcmp( list_fname, "-" ) )
+    {
+        list = stdin;
+        if( ferror( list ) )
+        {
+            fprintf( stderr, "%s: bad stdin stream\n", __func__ );
+            return 1;
+        }
+    }
+    else
+    {
+        if( NULL == ( list = fopen( list_fname, "r" ) ) )
+        {
+            fprintf( stderr, "%s: cannot open %s\n", __func__, list_fname );
+            return 1;
+        }
+    }
+    char *key, buf[16384];
+    while( NULL != ( key = get_next_key( buf, sizeof(buf), list ) ) )
+        if( cat_keypath( r, key, arg ) )
+            return 1;
+    int errsave = errno;
+    if( errsave )
+    {
+        fprintf( stderr, "%s: %s: %s\n", 
+                __func__, list_fname, strerror( errsave ) );
+        return 1;
+    }
+    fclose( list );
+    return 0;
+}
+
 int x_cat( int argc, char *argv[] )
 {
 // -g print for gnuplot
 // -c comments
 // -n numbering
 // -a all immediate subnodes
-// -R recursive //TODO
-    if( argc < 2 )
+    char *list1_fname = NULL,
+         *list2_fname = NULL;
+    if( argc < 1 )
     {
         h_cat();
         return 1;
@@ -195,14 +276,40 @@ int x_cat( int argc, char *argv[] )
             {
             case 'g':   gnuplot_spacing = 1;        break;
             case 'c':   print_comment_line = 1;     break;
+            case 'm':   print_end_mark = 1;         break;
             case 'n':   print_index = 1;            break;
             case 'a':   print_all_subnodes = 1;     break;
             case 'R':   print_recursive = 1;        break;
+            case 'f':   
+                {
+                    if( '\0' != *(p+1) || !(--argc) )
+                    {
+                        fprintf( stderr, "%s: -f must be followed by a file name\n", __func__ );
+                        return 1;
+                    }
+                    list1_fname = *(++argv);
+                } break;
+            case 'F':   
+                {
+                    if( '\0' != *(p+1) || !(--argc) )
+                    {
+                        fprintf( stderr, "%s: -F must be followed by a file name\n", __func__ );
+                        return 1;
+                    }
+                    list2_fname = *(++argv);
+                } break;
             default:    
                 fprintf( stderr, "%s: unknown option -%c\n", __func__, *p );
                 return 1;
             }
         }
+    }
+    if( NULL != list1_fname && NULL != list2_fname &&
+        0 == strcmp( list1_fname, "-" ) && 0 == strcmp( list2_fname, "-" ) )
+    {
+        fprintf( stderr, "%s: both pre- and post-list cannot be '-'(stdin)\n",
+                 __func__ );
+        return 1;
     }
     const char *fname = NULL;
     if( argc-- )
@@ -225,52 +332,35 @@ int x_cat( int argc, char *argv[] )
         goto errclean_r;
     }
     
-    // TODO print root for empty key list
     struct cat_node_arg arg;
     arg.r = r;
     arg.first = 1;
     arg.errstr = NULL;
-    if( 0 == argc )
+    // TODO print root for empty key list
+    if( 0 == argc && NULL == list1_fname && NULL == list2_fname )
     {
-        struct AffNode_s *r_node = aff_reader_root( r );
-        if( NULL == r_node )
-        {
-            fprintf( stderr, "%s: %s\n", __func__, aff_reader_errstr( r ) );
+        if( cat_keypath( r, "/", &arg ) )
             goto errclean_r;
-        }
-        if( print_recursive )
-            cat_nodes_recursive( r_node, &arg );
-        else if( print_all_subnodes )
-            aff_node_foreach( r_node, cat_single_node, &arg );
-        else
-            cat_single_node( r_node, &arg );
-        if( NULL != arg.errstr )
-        {
-            fprintf( stderr, "%s: %s", __func__, arg.errstr );
-            return 1;
-        }
     }
+    // pre-list
+    if( NULL != list1_fname )
+    {
+        if( cat_keylist( r, list1_fname, &arg ) )
+            goto errclean_r;
+    }
+    // cmdline list
     for( ; argc ; --argc, ++argv )
     {
-        struct AffNode_s *r_node = chdir_path( r, r_root, *argv );
-        if( NULL == r_node )
-        {
-            fprintf( stderr, "%s: %s\n", __func__, aff_reader_errstr( r ) );
+        if( cat_keypath( r, *argv, &arg ) )
             goto errclean_r;
-        }
-        if( print_recursive )
-            cat_nodes_recursive( r_node, &arg );
-        else if( print_all_subnodes )
-            aff_node_foreach( r_node, cat_single_node, &arg );
-        else
-            cat_single_node( r_node, &arg );
-        if( NULL != arg.errstr )
-        {
-            fprintf( stderr, "%s: %s", __func__, arg.errstr );
-            return 1;
-        }
     }
-
+    // TODO post-list
+    if( NULL != list2_fname )
+    {
+        if( cat_keylist( r, list2_fname, &arg ) )
+            goto errclean_r;
+    }
+    
     aff_reader_close( r );
     return 0;
 
@@ -282,14 +372,23 @@ errclean_r:
 void h_cat(void)
 {
     printf( "Usage:\n"
-            "lhpc-aff cat [-acgnR] <aff-file> [<keypath>] ...\n"
+            "lhpc-aff cat [-acgnmR] [-f <pre-list>] [-F <post-list>] <aff-file>\n"
+            "\t\t[<keypath>] ...\n"
             "Print the data associated with keypath in the file aff-file.\n"
             "If no keypath given, start from the root node\n"
-            "\t-a\tprint data of all immediate subkeys instead of given keypath itself\n"
+            "\t-a\tprint data of all immediate subkeys instead of\n"
+            "\t\tgiven keypath itself\n"
             "\t-c\tprint a comment line starting with #\n" 
             "\t-g\tput gnuplot-style double new-line separators between data\n"
             "\t\tof different keys\n"
+            "\t-m\tprint line '#AFF:END' after each record (useful for batch processing)\n"
             "\t-n\tput the array index in a first column\n"
             "\t-R\tprint the keypath all its subkeys recursively; \n"
-            "\t\tthis key takes precedence over `-a'\n");
+            "\t\tthis key takes precedence over `-a'\n"
+            "\t-f <pre-list>\n\t\tprint data from key list in file <pre-list> BEFORE\n"
+            "\t\tprocessing command line list\n"
+            "\t-F <post-list>\n\t\tprint data from key list in file <post-list> AFTER\n"
+            "\t\tprocessing command line list\n"
+            "\t\tparameter to only one of -f, -F options can be '-' (stdin)\n"
+            );
 }

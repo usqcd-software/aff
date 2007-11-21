@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <lhpc-aff.h>
 #include "common.h"
 
@@ -116,3 +117,60 @@ char *mk_tmp_filename( const char *mark, const char *fname )
 }
 #endif
 
+int split_farg( char *buf, int fargc, char ** fargv )
+{
+    int part = 1;
+    for( size_t i = 1 ; i < fargc ; ++i )
+        fargv[i] = NULL;
+    fargv[0] = buf;
+    int prev_bslash = 0,
+        cur_bslash = 0,
+        skip = 1;
+    char *s = buf,
+         *d = buf;
+    for( ; part <= fargc ; ++s, 
+                        prev_bslash = cur_bslash, cur_bslash = 0 )
+    {
+        if( '\0' == *s )
+        {
+            *(d++) = '\0';
+            break;
+        }
+        if( isspace( *s ) )
+        {
+            if( skip )
+                continue;
+            if( prev_bslash )
+            {
+                *(d++) = *s;
+                skip = 0;
+            }
+            else
+            {
+                *(d++) = '\0';
+                fargv[part++] = d;
+                skip = 1;
+            }
+            continue;
+        }
+        skip = 0;
+        if( '\\' == *s )
+        {
+            if( prev_bslash ) // double bslash
+                *(d++) = *s;
+            else
+                cur_bslash = 1;
+            continue;
+        }
+        if( prev_bslash )
+        {
+            fprintf( stderr, "%s: illegal escaped char \\%c\n",
+                     __func__, *s );
+            return -1;
+        }
+        *(d++) = *s;
+    }
+    if( skip )
+        fargv[--part] = NULL;
+    return part;
+}
