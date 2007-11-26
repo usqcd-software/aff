@@ -17,17 +17,25 @@
 #include "common.h"
 
 // XXX root node data is not copied!
-const char *insert_data( struct AffWriter_s *w, const char *fname, const char *keypath )
+const char *insert_data( struct AffWriter_s *w, 
+        const char *src_fname, const char *src_kpath, const char *dst_kpath )
 {
-    struct AffNode_s *w_node = mkdir_path( w, aff_writer_root( w ), keypath );
+    struct AffNode_s *w_root = aff_writer_root( w );
+    if( NULL == w_root )
+        return aff_writer_errstr( w );
+    struct AffNode_s *w_node = mkdir_path( w, aff_writer_root( w ), dst_kpath );
     if( NULL == w_node )
         return aff_writer_errstr( w );
-    struct AffReader_s *r = aff_reader( fname );
+    struct AffReader_s *r = aff_reader( src_fname );
     if( NULL != aff_reader_errstr( r ) )
         return aff_reader_errstr( r );
     struct AffNode_s *r_root = aff_reader_root( r );
     if( NULL == r_root )
         return aff_reader_errstr( r );
+    struct AffNode_s *r_node = chdir_path( r, r_root, src_kpath );
+    if( NULL == r_node )
+        return aff_reader_errstr( r );
+    
 // FIXME no data in the root node
 //    if( NULL != ( status = copy_node_data( r, r_root, w, w_node ) ) )
 //        return status;
@@ -38,7 +46,7 @@ const char *insert_data( struct AffWriter_s *w, const char *fname, const char *k
     arg.w_parent = w_node;
     arg.weak = COPY_NODE_WEAK;
     arg.errstr = NULL;
-    aff_node_foreach( r_root, copy_nodes_recursive, &arg );
+    aff_node_foreach( r_node, copy_nodes_recursive, &arg );
     aff_reader_close( r );
     if( NULL != arg.errstr )
         return arg.errstr;
@@ -47,8 +55,8 @@ const char *insert_data( struct AffWriter_s *w, const char *fname, const char *k
 
 int insert_keylist( struct AffWriter_s *w, const char *list_fname )
 {
-    char buf[32768];
-    char *fargv[2];
+    char buf[49152];
+    char *fargv[3];
     const char * status;
     FILE *list;
     int num;
@@ -71,30 +79,42 @@ int insert_keylist( struct AffWriter_s *w, const char *list_fname )
     }
     while( NULL != fgets( buf, sizeof(buf), list ) )
     {
-        num = split_farg( buf, 2, fargv );
+        if( '\n' != buf[strlen(buf)-1] )
+        {
+            fprintf( stderr, "%s: line too long, skipping\n", __func__ );
+            while( NULL != fgets( buf, sizeof(buf), list ) )
+                if( '\n' == buf[strlen(buf)-1] )
+                    break;
+            continue;
+        }
+        num = split_farg( buf, 3, fargv );
         if( num < 0 )
-            return 1;
+        {
+            fprintf( stderr, "%s: unexpected result of split_farg; exiting\n",
+                    __func__ );
+            goto errclean_r;
+        }
         if( num == 0 )
             continue;
-        if( num == 1 )
+        if( num < 3 )
         {
-            fprintf( stderr, "%s: unpaired file name '%s'\n",
-                     __func__, fargv[0] );
-            return 1;
+            fprintf( stderr, "%s: syntax error: need 3 names, only %d given\n",
+                     __func__, num );
+            goto errclean_r;
         }
-//        // FIXME remove test
-//        printf( "'%s' -> '%s'\n", fargv[0], fargv[1] );
-//        continue;
-//        // FIXME end of test
-        if( NULL != ( status = insert_data( w, fargv[0], fargv[1] ) ) )
+        if( NULL != ( status = insert_data( w, fargv[1], fargv[2], fargv[0] ) ) )
         {
-            fprintf( stderr, "%s: %s :%s: %s\n", 
-                     __func__, fargv[0], fargv[1], status );
-            return 1;
+            fprintf( stderr, "%s: %s://%s: %s: %s\n", 
+                     __func__, fargv[1], fargv[2], fargv[0], status );
+            goto errclean_r;
         }
     }
     fclose( list );
     return 0;    
+
+errclean_r:
+    fclose( list );
+    return 1;
 }
 
 int x_insert( int argc, char *argv[] )
@@ -187,10 +207,11 @@ int x_insert( int argc, char *argv[] )
             goto errclean_w;
     }
     // insert data from cmdline key list
-    for( ; argc ; argc -= 2, argv += 2 )
-        if( NULL != ( status = insert_data( w, argv[0], argv[1] ) ) )
+    for( ; argc ; argc -= 3, argv += 3 )
+        if( NULL != ( status = insert_data( w, argv[1], argv[2], argv[0] ) ) )
         {
-            fprintf( stderr, "%s: %s :%s: %s\n", __func__, argv[0], argv[1], status );
+            fprintf( stderr, "%s: %s://%s: %s: %s\n", __func__, 
+                    argv[1],argv[2], argv[0], status );
             goto errclean_w;
         }
     // insert data from post-list
@@ -229,33 +250,43 @@ errclean_w:
 void h_insert(void)
 {
     printf( "Usage:\nlhpc-aff insert -o <output> [-f <pre-list>] [-F <post-list>]\n"
-            "\t\t[<aff-file1> <keypath1>] ...\n"
-            "Join all the files into one aff-file. The contents of <aff-fileN>\n"
-            "is inserted at keypathN. New data replaces old data, and the"
-            "leftmost data takes precedence. Output file name may be in the list\n"
-            "of files to insert. It will be read first, then replaced.\n"
+            "\t\t[<dst-kpath> <src-file> <src-kpath>] ...\n"
+            "Join data entries into one aff-file. Insertion is recursive:\n"
+            "<output>[<dst-kpath>/]  <--  <src-file>[<src-kpath>/*].\n"
+            "Note that the data in <src-kpath> itself is NOT copied.\n"
+            "New data replaces old data, and the leftmost data takes precedence.\n"
+            "Output file name may be in the list of files to insert: it will be\n"
+            "replaced after the end of all insertions.\n"
             "\t-o <output>\n\t\twrite result of merge to <output>.\n"
-            "\t-f <pre-list>\n\t\tprint data from key list in file <pre-list> BEFORE\n"
-            "\t\tprocessing command line list\n"
-            "\t-F <post-list>\n\t\tprint data from key list in file <post-list> AFTER\n"
-            "\t\tprocessing command line list\n"
-            "\t\tparameter to only one of -f, -F options can be '-' (stdin)\n"
+            "\t-f <pre-list>\n\t\texecute insert instructions in file <pre-list> BEFORE\n"
+            "\t\tprocessing command line list.\n"
+            "\t-F <post-list>\n\t\texecute insert instructions in file <post-list> AFTER\n"
+            "\t\tprocessing command line list.\n"
+            "\t\teach line of <list> is a separate insert instruction,\n"
+            "\t\tand it must have at least three names, in order:\n"
+            "\t\t<dst-kpath> <src-file> <src-kpath>\n"
+            "\t\tparameter to only one of -f, -F options can be '-' (stdin).\n"
           );
 }
 
 void h_join(void)
 {
     printf( "Usage:\nlhpc-aff join -o <output> [-f <pre-list>] [-F <post-list>]\n"
-            "\t\t[<aff-file1> <keypath1>] ...\n"
-            "Join all the files into one aff-file. The contents of <aff-fileN>\n"
-            "is inserted at keypathN. New data replaces old data, and the"
-            "leftmost data takes precedence. Output file name may be in the list\n"
-            "of files to insert. It will be read first, then replaced.\n"
+            "\t\t[<dst-kpath> <src-file> <src-kpath>] ...\n"
+            "Join data entries into one aff-file. Insertion is recursive:\n"
+            "<output>[<dst-kpath>/]  <--  <src-file>[<src-kpath>/*].\n"
+            "Note that the data in <src-kpath> itself is NOT copied.\n"
+            "New data replaces old data, and the leftmost data takes precedence.\n"
+            "Output file name may be in the list of files to insert: it will be\n"
+            "replaced after the end of all insertions.\n"
             "\t-o <output>\n\t\twrite result of merge to <output>.\n"
-            "\t-f <pre-list>\n\t\tprint data from key list in file <pre-list> BEFORE\n"
-            "\t\tprocessing command line list\n"
-            "\t-F <post-list>\n\t\tprint data from key list in file <post-list> AFTER\n"
-            "\t\tprocessing command line list\n"
-            "\t\tparameter to only one of -f, -F options can be '-' (stdin)\n"
+            "\t-f <pre-list>\n\t\texecute insert instructions in file <pre-list> BEFORE\n"
+            "\t\tprocessing command line list.\n"
+            "\t-F <post-list>\n\t\texecute insert instructions in file <post-list> AFTER\n"
+            "\t\tprocessing command line list.\n"
+            "\t\teach line of <list> is a separate insert instruction,\n"
+            "\t\tand it must have at least three names, in order:\n"
+            "\t\t<dst-kpath> <src-file> <src-kpath>\n"
+            "\t\tparameter to only one of -f, -F options can be '-' (stdin).\n"
           );
 }

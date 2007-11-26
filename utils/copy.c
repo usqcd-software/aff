@@ -10,16 +10,131 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <lhpc-aff.h>
+#include <string.h>
 #include "util.h"
 #include "common.h"
+
+static int do_copy( struct AffReader_s *r, struct AffWriter_s *w,
+        const char *src_kpath, const char *dst_kpath, int copy_recursive )
+{
+    const char *status;
+    struct AffNode_s *r_node = chdir_path( r, aff_reader_root( r ), src_kpath );
+    if( NULL == r_node )
+    {
+        fprintf( stderr, "%s: cannot read key [%s]: %s\n",
+                __func__, src_kpath, aff_reader_errstr( r ) );
+        return 1;
+    }
+    if( aff_reader_root( r ) == r_node )
+    {
+        fprintf( stderr, "%s: %s: cannot copy the root node; use extract instead\n",
+                __func__, src_kpath );
+        return 1;
+    }
+    struct AffNode_s *w_node = mkdir_path( w, aff_writer_root( w ), dst_kpath );
+    if( NULL == w_node )
+    {
+        fprintf( stderr, "%s: cannot write to key [%s]: %s\n", 
+                __func__, dst_kpath, aff_writer_errstr( w ) );
+        return 1;
+    }
+    if( aff_writer_root( w ) == w_node )
+    {
+        fprintf( stderr, "%s: %s: cannot replace the root node; use extract instead\n",
+                __func__, dst_kpath );
+        return 1;
+    }
+    
+    if( NULL != ( status = copy_node_data( r, r_node, w, w_node, COPY_NODE_STRONG ) ) )
+    {
+        fprintf( stderr, "%s: %s", __func__, status );
+        return 1;
+    }
+    struct copy_nodes_arg arg;
+    if( copy_recursive )
+    {
+        arg.r = r;
+        arg.w = w;
+        arg.w_parent = w_node;
+        arg.weak = COPY_NODE_WEAK;
+        arg.errstr = NULL;
+        aff_node_foreach( r_node, copy_nodes_recursive, (void *)&arg );
+        if( NULL != arg.errstr )
+        {
+            fprintf( stderr, "%s: %s\n", __func__, arg.errstr );
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int copy_keylist( struct AffReader_s *r, struct AffWriter_s *w,
+        const char *list_fname, int copy_recursive )
+{
+    FILE *list;
+    char *fargv[2];
+    char buf[32768];
+    int num;
+    if( 0 == strcmp( list_fname, "-" ) )
+    {
+        list = stdin;
+        if( ferror( list ) )
+        {
+            fprintf( stderr, "%s: bad stdin stream\n", __func__ );
+            return 1;
+        }
+    }
+    else
+    {
+        if( NULL == ( list = fopen( list_fname, "r" ) ) )
+        {
+            fprintf( stderr, "%s: cannot open %s\n", __func__, list_fname );
+            return 1;
+        }
+    }
+    while( NULL != fgets( buf, sizeof(buf), list ) )
+    {
+        if( '\n' != buf[strlen(buf)-1] )
+        {
+            fprintf( stderr, "%s: line too long, skipping\n", __func__ );
+            while( NULL != fgets( buf, sizeof(buf), list ) )
+                if( '\n' == buf[strlen(buf)-1] )
+                    break;
+            continue;
+        }
+        num = split_farg( buf, 2, fargv );
+        if( num < 0 )
+        {
+            fprintf( stderr, "%s: unexpected result of split_farg; exiting\n",
+                    __func__ );
+            goto errclean_r;
+        }
+        if( num == 0 )
+            continue;
+        if( num < 2 )
+        {
+            fprintf( stderr, "%s: syntax error: expect 2 names, only %d given\n",
+                     __func__, num );
+            goto errclean_r;
+        }
+        if( do_copy( r, w, fargv[0], fargv[1], copy_recursive ) )
+            goto errclean_r;
+    }
+    fclose( list );
+    return 0;
+
+errclean_r:
+    fclose( list );
+    return 1;
+}
 
 int x_copy( int argc, char **argv )
 {
     int copy_recursive = 0;
     const char *src_fname = NULL,
-               *src_keypath = NULL,
                *dst_fname = NULL,
-               *dst_keypath = NULL,
+               *list1_fname = NULL,
+               *list2_fname = NULL,
                *status = NULL;
     for( ; argc ; --argc, ++argv )
     {
@@ -30,6 +145,24 @@ int x_copy( int argc, char **argv )
             switch( *p )
             {
             case 'R': copy_recursive = 1;       break;
+            case 'f':
+                {
+                    if( '\0' != *(p+1) || !(--argc) )
+                    {
+                        fprintf( stderr, "%s: -f must be followed by a file name\n", __func__ );
+                        return 1;
+                    }
+                    list1_fname = *(++argv);
+                } break;
+            case 'F':
+                {
+                    if( '\0' != *(p+1) || !(--argc) )
+                    {
+                        fprintf( stderr, "%s: -F must be followed by a file name\n", __func__ );
+                        return 1;
+                    }
+                    list2_fname = *(++argv);
+                } break;
             default:
                 fprintf( stderr, "%s: unknown option -%c\n", __func__, *p );
                 return 1;
@@ -45,37 +178,21 @@ int x_copy( int argc, char **argv )
         src_fname = *(argv++);
     if( !(argc--) )
     {
-        fprintf( stderr, "%s: source key name should be given\n", __func__ );
-        return 1;
-    }
-    else
-        src_keypath = *(argv++);
-    if( !(argc--) )
-    {
         fprintf( stderr, "%s: target aff file name should be given\n", __func__ );
         return 1;
     }
     else
         dst_fname = *(argv++);
-    if( !(argc--) )
+    if( argc % 2 )
     {
-        fprintf( stderr, "%s: target key name should be given\n", __func__ );
+        fprintf( stderr, "%s: unpaired src_kpath; exiting\n", __func__ );
         return 1;
     }
-    else
-        dst_keypath = *(argv++);
 
     struct AffReader_s *r = aff_reader( src_fname );
     if( NULL != aff_reader_errstr( r ) )
     {
         fprintf( stderr, "%s: %s: %s\n", __func__, src_fname, aff_reader_errstr( r ) );
-        goto errclean_r;
-    }
-    struct AffNode_s *r_node = chdir_path( r, aff_reader_root( r ), src_keypath  );
-    if( NULL == r_node )
-    {
-        fprintf( stderr, "%s: %s: %s: %s\n", 
-                __func__, src_fname, src_keypath, aff_reader_errstr( r ) );
         goto errclean_r;
     }
     char *tmp_fname = mk_tmp_filename( ".aff-tmp.", dst_fname );
@@ -90,48 +207,31 @@ int x_copy( int argc, char **argv )
         fprintf( stderr, "%s: %s: %s\n", __func__, tmp_fname, aff_writer_errstr( w ) );
         goto errclean_rw;
     }
-    struct AffNode_s *w_node = mkdir_path( w, aff_writer_root( w ), dst_keypath );
-    if( NULL == w_node )
+    
+    if( NULL != list1_fname )
     {
-        fprintf( stderr, "%s: %s: %s: %s\n", 
-                __func__, tmp_fname, dst_keypath, aff_writer_errstr( w ) );
-        goto errclean_rw;
+        if( copy_keylist( r, w, list1_fname, copy_recursive ) )
+            goto errclean_rw;
     }
-    if( aff_writer_root( w ) == w_node )
+    for( ; argc ; argc -= 2, argv += 2 )
     {
-        fprintf( stderr, "%s: %s: cannot replace the root node; use extract instead\n",
-                __func__, dst_keypath );
-        goto errclean_rw;
+        if( do_copy( r, w, argv[0], argv[1], copy_recursive ) )
+            goto errclean_rw;
+    }
+    if( NULL != list2_fname )
+    {
+        if( copy_keylist( r, w, list2_fname, copy_recursive ) )
+            goto errclean_rw;
     }
     
-    if( NULL != ( status = copy_node_data( r, r_node, w, w_node, COPY_NODE_STRONG ) ) )
-    {
-        fprintf( stderr, "%s: %s", __func__, status );
-        goto errclean_rw;
-    }
-    struct copy_nodes_arg arg;
-    if( copy_recursive )
-    {
-        arg.r = r;
-        arg.w = w;
-        arg.w_parent = w_node;
-        arg.weak = COPY_NODE_STRONG;
-        arg.errstr = NULL;
-        aff_node_foreach( r_node, copy_nodes_recursive, (void *)&arg );
-        if( NULL != arg.errstr )
-        {
-            fprintf( stderr, "%s: %s\n", __func__, arg.errstr );
-            goto errclean_rw;
-        }
-    }
     aff_reader_close( r );
-
     r = aff_reader( dst_fname );
     if( NULL != aff_reader_errstr( r ) )
     {
         fprintf( stderr, "%s: %s\n", __func__, aff_reader_errstr( r ) );
         goto errclean_rw;
     }
+    struct copy_nodes_arg arg;
     arg.r = r;
     arg.w = w;
     arg.w_parent = aff_writer_root( w );
@@ -173,12 +273,22 @@ errclean_r:
 void h_copy(void)
 {
     printf( "Usage:\n"
-            "lhpc-aff cp <src> <src-keypath> <dst> <dst-keypath>\n" 
-            "Copy data (and all descendants, if necessary) of key src-keypath\n"
-            "from the aff file src to dst-keypath of the aff file dst.\n"
-            "Key dst-keypath cannot refer to the root node, use 'extract' instead.\n"
-            "New data replaces old data. Both files must be valid aff files.\n"
+            "lhpc-aff cp [-f <list>] [-F <list>] <src-file> <dst-file>\n"
+            "\t\t[<src-kpath> <dst-kpath>] ...\n" 
+            "Copy data from <src-kpath> of <src-file> to <dst-kpath> of <dst-file>:\n"
+            "<dst-file>[<dst-kpath>]  <--  <src-file>[<src-kpath>].\n"
+            "Keys <src-kpath> and <dst-kpath> cannot be root nodes, use 'extract' instead.\n"
+            "New data replaces old data. Both files must exist. They may be the same file,\n"
+            "which is rewritten in the end of all copying.\n"
             "Options:\n"
-            "\t-R\tcopy all descendants as well\n"
+            "\t-R\tcopy data sub-entries recursively.\n"
+            "\t-f <pre-list>\n\t\texecute copy instructions in file <pre-list> BEFORE\n"
+            "\t\tprocessing command line list\n"
+            "\t-F <post-list>\n\t\texecute copy instructions in file <pre-list> AFTER\n"
+            "\t\tprocessing command line list\n"
+            "\t\teach line of <list> is a separate insert instruction,\n"
+            "\t\tand it must have at least two names, in order:\n"
+            "\t\t<src-kpath> <dst-kpath>\n"
+            "\t\tparameter to only one of -f, -F options can be '-' (stdin).\n"
             );
 }

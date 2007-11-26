@@ -148,6 +148,8 @@ int split_farg( char *buf, int fargc, char ** fargv )
             else
             {
                 *(d++) = '\0';
+                if( fargc <= part )
+                    break;
                 fargv[part++] = d;
                 skip = 1;
             }

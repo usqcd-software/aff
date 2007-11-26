@@ -1,0 +1,5 @@
+# vim: syn=sh
+$RUN ls 	test.aff >/dev/null || exit 1
+$RUN ls -l 	test.aff >/dev/null || exit 1
+$RUN ls -R 	test.aff >/dev/null || exit 1
+$RUN ls -lR 	test.aff >/dev/null || exit 1

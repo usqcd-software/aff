@@ -183,7 +183,8 @@ end:
     {
 	const char *msg = aff->error;
 
-	fclose(aff->file);
+        if( NULL != aff->file )
+	    fclose(aff->file);
 	aff_stable_fini(aff->stable);
 	aff_tree_fini(aff->tree);
 	free(aff);

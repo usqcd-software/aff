@@ -22,12 +22,12 @@
 // if fname is NULL, start with empty file
 // XXX root node data is not copied!
 const char *extract_data( struct AffReader_s *r, const char *fname,
-        const char *out_fname, const char *keypath, int sub )
+        const char *dst_fname, const char *dst_kpath, const char *src_kpath )
 {
-    if( NULL == out_fname )
+    if( NULL == dst_fname )
         return "extract_data: invalid output file name";
     const char *status = NULL;
-    struct AffNode_s *r_node = chdir_path( r, aff_reader_root( r ), keypath );
+    struct AffNode_s *r_node = chdir_path( r, aff_reader_root( r ), src_kpath );
     if( NULL == r_node )
         return aff_reader_errstr( r );
     struct stat stat_buf;
@@ -39,15 +39,15 @@ const char *extract_data( struct AffReader_s *r, const char *fname,
     if( ! new_file )
     {
         // create tmpfile just for the case 'fname' and 'out_fname' are the same file
-        if( NULL == ( tmp_fname = mk_tmp_filename( ".tmp-aff.", out_fname ) ) )
+        if( NULL == ( tmp_fname = mk_tmp_filename( ".tmp-aff.", dst_fname ) ) )
             return "extract_data: cannot generate unique writable filename";
     }
     else
     {
         // start with empty file 'out_fname'
-        if( NULL == ( tmp_fname = (char *)malloc( strlen( out_fname ) + 1 ) ) )
+        if( NULL == ( tmp_fname = (char *)malloc( strlen( dst_fname ) + 1 ) ) )
             return "extract_data: not enough memory";
-        strcpy( tmp_fname, out_fname );
+        strcpy( tmp_fname, dst_fname );
     }
     struct AffWriter_s *w = aff_writer( tmp_fname );
     if( NULL != ( status = aff_writer_errstr( w ) ) )
@@ -58,28 +58,31 @@ const char *extract_data( struct AffReader_s *r, const char *fname,
         status = aff_writer_errstr( w );
         goto errclean_w;
     }
+    struct AffNode_s *w_node = mkdir_path( w, w_root, dst_kpath );
+    if( NULL == w_node )
+    {
+        status = aff_writer_errstr( w );
+        goto errclean_w;
+    }
         
     struct copy_nodes_arg arg;
     arg.r   = r;
     arg.w   = w;
-    arg.w_parent = w_root;
+    arg.w_parent = w_node;
     arg.weak = COPY_NODE_STRONG;
     arg.errstr = NULL;
-    if( sub )
-        aff_node_foreach( r_node, copy_nodes_recursive, &arg );
-    else
-        copy_nodes_recursive( r_node, &arg );
+    aff_node_foreach( r_node, copy_nodes_recursive, &arg );
     if( NULL != arg.errstr )
         return arg.errstr;
     
     struct AffReader_s *r_old;
-    if( NULL != fname )
+    if( ! new_file )
     {
         r_old = aff_reader( fname );
         if( NULL != ( status = aff_reader_errstr( r_old ) ) )
             goto errclean_rw;
-        struct AffNode_s *r_old_node = aff_reader_root( r_old );
-        if( NULL == r_old )
+        struct AffNode_s *r_old_root = aff_reader_root( r_old );
+        if( NULL == r_old_root )
         {
             status = aff_reader_errstr( r_old );
             goto errclean_rw;
@@ -89,7 +92,7 @@ const char *extract_data( struct AffReader_s *r, const char *fname,
         arg.w_parent = w_root;
         arg.weak = COPY_NODE_WEAK;
         arg.errstr = NULL;
-        aff_node_foreach( r_old_node, copy_nodes_recursive, &arg );
+        aff_node_foreach( r_old_root, copy_nodes_recursive, &arg );
         if( NULL != ( status = arg.errstr ) ) 
             goto errclean_rw;
         aff_reader_close( r_old );
@@ -98,10 +101,9 @@ const char *extract_data( struct AffReader_s *r, const char *fname,
     if( NULL != ( status = aff_writer_close( w ) ) )
         return status;
     if( NULL != fname )
-        if( rename( tmp_fname, out_fname ) )
+        if( rename( tmp_fname, dst_fname ) )
         {
             status = strerror( errno );
-            perror( __func__ );
             fprintf( stderr, "%s: output saved to %s", __func__, tmp_fname );
             free( tmp_fname );
             return status;
@@ -114,18 +116,17 @@ errclean_rw:
 errclean_w:
     aff_writer_close( w );
     if( remove( tmp_fname ) )
-        perror( __func__ );
+        perror( tmp_fname );
     free( tmp_fname );
     return status;
 }
     
-int start_empty = 0,
-    print_all_subnodes = 0;
+int start_empty = 0;
 
 int extract_keylist( struct AffReader_s *r, const char *list_fname )
 {
-    char buf[32768];
-    char *fargv[2];
+    char buf[49152];
+    char *fargv[3];
     const char * status;
     FILE *list;
     int num;
@@ -148,30 +149,46 @@ int extract_keylist( struct AffReader_s *r, const char *list_fname )
     }
     while( NULL != fgets( buf, sizeof(buf), list ) )
     {
-        num = split_farg( buf, 2, fargv );
+        if( '\n' != buf[strlen(buf)-1] )
+        {
+            fprintf( stderr, "%s: line too long, skipping\n", __func__ );
+            while( NULL != fgets( buf, sizeof(buf), list ) )
+                if( '\n' == buf[strlen(buf)-1] )
+                    break;
+            continue;
+        }
+        num = split_farg( buf, 3, fargv );
         if( num < 0 )
-            return 1;
+        {
+            fprintf( stderr, "%s: unexpected result of split_farg; exiting\n",
+                    __func__ );
+            goto errclean_r;
+        }
         if( num == 0 )
             continue;
-        if( num == 1 )
+        if( num < 3 )
         {
-            fprintf( stderr, "%s: unpaired file name '%s'\n",
-                     __func__, fargv[0] );
-            return 1;
+            fprintf( stderr, "%s: syntax error: expected 3 names, only %d given\n",
+                     __func__, num );
+            goto errclean_r;
         }
         if( start_empty )
-            status = extract_data( r, NULL, fargv[0], fargv[1], print_all_subnodes );
+            status = extract_data( r, NULL, fargv[1], fargv[2], fargv[0] );
         else
-            status = extract_data( r, fargv[0], fargv[0], fargv[1], print_all_subnodes );
+            status = extract_data( r, fargv[1], fargv[1], fargv[2], fargv[0] );
         if( NULL != status )
         {
-            fprintf( stderr, "%s: %s: %s: %s\n", __func__, fargv[0], fargv[1], status );
-            return 1;
+            fprintf( stderr, "%s: %s[%s] <- [%s]: %s\n", 
+                    __func__, fargv[1], fargv[2], fargv[0], status );
+            goto errclean_r;
         }
     }
     fclose( list );
     return 0;    
 
+errclean_r:
+    fclose( list );
+    return 1;
 }
 
 int x_extract( int argc, char *argv[] )
@@ -189,7 +206,6 @@ int x_extract( int argc, char *argv[] )
             switch( *p )
             {
             case 'e': start_empty = 1;          break;
-            case 'a': print_all_subnodes = 1;   break;
             case 'f':
                 {
                     if( '\0' != *(p+1) || !(--argc) )
@@ -231,7 +247,7 @@ int x_extract( int argc, char *argv[] )
     }
     else
         fname = *(argv++);
-    if( argc % 2 )
+    if( argc % 3 )
     {
         fprintf( stderr, "%s: unpaired key and filename; try 'lhpc-aff help extract'\n", 
                 __func__ );
@@ -248,15 +264,16 @@ int x_extract( int argc, char *argv[] )
         if( extract_keylist( r, list1_fname ) )
             goto errclean_r;
     }
-    for( ; argc ; argc-=2, argv+=2 )
+    for( ; argc ; argc-=3, argv+=3 )
     {
         if( start_empty )
-            status = extract_data( r, NULL, argv[0], argv[1], print_all_subnodes );
+            status = extract_data( r, NULL, argv[1], argv[2], argv[0] );
         else
-            status = extract_data( r, argv[0], argv[0], argv[1], print_all_subnodes );
+            status = extract_data( r, argv[1], argv[1], argv[2], argv[0] );
         if( NULL != status )
         {
-            fprintf( stderr, "%s: %s: %s: %s\n", __func__, argv[0], argv[1], status );
+            fprintf( stderr, "%s: %s[%s] <- [%s]: %s\n", 
+                    __func__, argv[1], argv[2], argv[0], status );
             goto errclean_r;
         }
     }
@@ -278,19 +295,23 @@ errclean_r:
 void h_extract(void)
 {
     printf( "Usage:\n"
-            "lhpc-aff extract [-ae] <aff-file> [-f <pre-list>] [-F <post-list>]\n"
-            "\t\t[<output1> <keypath1>] ...\n"
-            "Extract keypaths from aff-file and put it into the root of other aff files.\n"
-            "New data replaces old data. If an output file does not exist,\n"
-            "it will be created\n"
+            "lhpc-aff extract [-e] [-f <pre-list>] [-F <post-list>] <aff-file>\n"
+            "\t\t[<src-kpath> <dst-file> <dst-kpath>] ...\n"
+            "Extract recursively all the data entries from <src-kpath> of <aff-file>\n"
+            "and put it into <dst-file> at <dst-kpath>:\n"
+            "<dst-file>[<dst-kpath>/]  <--  <aff-file>[<src-kpath>/*]\n"
+            "Note that the data from <src-kpath> itself is not copied. New data\n"
+            "replaces old data. If an output file does not exist, it will be created\n"
             "Options:\n"
-            "\t-a\textract all the subkeys, instead of the keypath itself\n" 
-            "\t-e\tstart each output with an empty file (truncate each file)\n"
+            "\t-e\tstart each export with an empty output file\n"
+            "\t\t(all preexisting data is discarded)\n"
             "\t-f <pre-list>\n\t\tprint data from key list in file <pre-list> BEFORE\n"
             "\t\tprocessing command line list\n"
             "\t-F <post-list>\n\t\tprint data from key list in file <post-list> AFTER\n"
             "\t\tprocessing command line list\n"
-            "\t\teach line in <list> files must be a pair '<output> <keypath>'.\n" 
+            "\t\teach line of <list> is a separate extract instruction,\n"
+            "\t\tand it must have at least three names, in order:\n"
+            "\t\t<src-kpath> <dst-file> <dst-kpath>.\n"
             "\t\tparameter to only one of -f, -F options can be '-' (stdin)\n"
           );
 }

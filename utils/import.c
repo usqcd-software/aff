@@ -389,10 +389,11 @@ err_clean_w:
 
 void h_import(void)
 {
-    printf( "Usage:\nlhpc-aff import -[cidx] [-N <N>] [-o <output>] {-e|<aff-file>} [key-path]\n"
-            "Import blank-separated data from standard input to <aff-file> under key-path.\n"
-            "If no output file name given, rewrite the original file.\n"
-            "New data replaces the old data.\n"
+    printf( "Usage:\nlhpc-aff import -[cidx] [-N <N>] [-o <output>] {-e|<aff-file>}\n"
+            "\t\t<key-path>\n"
+            "Import whitespace-separated data or a string from standard input\n"
+            "to <aff-file> under <key-path>. If no output file name given, rewrite \n"
+            "the original file. New data replaces the old data.\n"
             "\t-v\tvoid input; useful to create a new empty aff-file\n"
             "\t-c\tchar array input\n"  
             "\t-i\tinteger array input\n"
