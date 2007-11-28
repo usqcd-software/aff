@@ -2,7 +2,11 @@
 #define MARK_ccee59e4_4306_46b9_a6f0_df315a0233fe
 #include "stable.h"
 
-#define BLOCK_SIZE 1024 /* 1024 */
+#ifdef AFF_DEBUG
+#define BLOCK_SIZE 3
+#else
+#define BLOCK_SIZE 1024
+#endif /* defined(AFF_DEBUG) */
 
 struct AffSymbol_s {
     const char *name;

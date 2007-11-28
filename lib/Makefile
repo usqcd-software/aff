@@ -1,4 +1,4 @@
-CONFIG	= config.none
+CONFIG	= config/none
 TOP	= ..#
 .PHONY: all clean realclean install
 
@@ -120,13 +120,13 @@ io.headers = io.h
 interface.parts = aff.h node.h tree.h stable.h treap.h md5.h coding.h
 
 
-ifeq "$(wildcard $(TOP)/$(CONFIG))" ""
+ifeq "$(wildcard $(TOP)/config/$(CONFIG))" ""
 all install:
 	@echo "configuration $(CONFIG) not found"
 	@exit 1
 
 else
-include $(TOP)/$(CONFIG)
+include $(TOP)/config/$(CONFIG)
 
 all: $(library) $(interface)
 

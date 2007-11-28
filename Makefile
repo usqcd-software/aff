@@ -1,6 +1,6 @@
 # This is a main Makefile for the AFF library and utilities.
 #
-CONFIG=config.none
+CONFIG=none
 subdirs=lib utils
 
 prefix=/usr/local
@@ -10,14 +10,14 @@ prefix_bin=$(prefix)/bin
 prefix_doc=$(prefix)/doc
 .PHONY: all clean realclean install do.install
 
-ifeq "$(wildcard $(CONFIG))" ""
+ifeq "$(wildcard config/$(CONFIG))" ""
 all install:
 	@echo "configuration $(CONFIG) not found"
 	@exit 1
 
 export CONFIG
 else
-include $(CONFIG)
+include config/$(CONFIG)
 	
 #you can transfer all the parameters to sub-make with preceding directive
 # export VAR1 VAR2 ...
@@ -69,7 +69,7 @@ do.install: lhpc-aff-config docs/aff_spec.pdf COPYRIGHT
 	   chmod 444 $(prefix_doc)/$$bf; \
 	done
 
-lhpc-aff-config: Makefile $(CONFIG) aff-config.in
+lhpc-aff-config: Makefile config/$(CONFIG) aff-config.in
 	sed -e 's?@CC@?$(install.CC)?' \
             -e 's?@CFLAGS@?$(install.CFLAGS)?' \
             -e 's?@LIBS@?$(install.LIBS)?' \

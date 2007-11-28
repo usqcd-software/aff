@@ -2,7 +2,11 @@
 #define MARK_9bd92b39_c568_4256_867b_2febdcaed2d2
 #include "tree.h"
 
-#define BLOCK_SIZE 1024 /* 1024 */
+#ifdef AFF_DEBUG
+#define BLOCK_SIZE 3
+#else
+#define BLOCK_SIZE 1024
+#endif /* defined(AFF_DEBUG) */
 
 struct Block_s {
     struct Block_s       *next;

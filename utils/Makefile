@@ -1,4 +1,4 @@
-CONFIG	= config.none
+CONFIG	= config/none
 TOP	= ..#
 .PHONY: all clean realclean lib
 
@@ -19,13 +19,13 @@ sources = lhpc-aff.c \
 	  common.c
 
 
-ifeq "$(wildcard $(TOP)/$(CONFIG))" ""
+ifeq "$(wildcard $(TOP)/config/$(CONFIG))" ""
 all install:
 	@echo "configuration $(CONFIG) not found"
 	@exit 1
 
 else
-include $(TOP)/$(CONFIG)
+include $(TOP)/config/$(CONFIG)
 
 all: $(program)
 
