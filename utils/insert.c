@@ -181,7 +181,7 @@ int x_insert( int argc, char *argv[] )
                 __func__ );
         return 1;
     }
-    if( argc % 2 )
+    if( argc % 3 )
     {
         fprintf( stderr, "%s: unpaired aff-file and keypath; "
                  "try 'lhpc-aff help insert'\n", __func__ );

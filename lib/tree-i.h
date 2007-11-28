@@ -2,7 +2,7 @@
 #define MARK_9bd92b39_c568_4256_867b_2febdcaed2d2
 #include "tree.h"
 
-#define BLOCK_SIZE 3 /* 1024 */
+#define BLOCK_SIZE 1024 /* 1024 */
 
 struct Block_s {
     struct Block_s       *next;
