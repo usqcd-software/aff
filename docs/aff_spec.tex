@@ -31,12 +31,12 @@
 %\newcommand{\Synopsis}{{\textbf Synopsis}\\}
 %\newcommand{\RetValue}{{\textbf Return value}\\}
 \def\FuncHead#1{\subsubsection{\libname{#1()}}}
-\def\Syn{\par\noindent{\bf Synopsis}\tt
+\def\Syn{\par\nopagebreak\noindent{\bf Synopsis}\tt
   \everypar={\hangindent=64pt\hangafter=1
     \raggedright\hspace{16pt}}\par\noindent}
-\def\Desc#1{\par\noindent{\bf Description}\par
+\def\Desc#1{\par\nopagebreak\noindent{\bf Description}\par
   \hangindent=16pt\hangafter=0\noindent#1\par}
-\def\RetVal#1{\par\noindent{\bf Return Value}\par
+\def\RetVal#1{\par\nopagebreak\noindent{\bf Return Value}\par
   \hangindent=16pt\hangafter=0\noindent#1\par}
 
 \setcounter{tocdepth}{3}
@@ -82,7 +82,7 @@ Data is stored in platform-independent, binary form.
 To assure the data validity, both data and service information is checked against stored
 MD5 checksum.
 
-
+\pagebreak
 \section{Suggested AFF usage}
 
 We suggest replacing the output of ADAT strippers with an AFF file format. 
@@ -148,7 +148,6 @@ we write here as a UNIX file name: \ctext{/key1/key2/.../keyN}. The top node in 
 \end{eqnarray*}
 The subkeys are case-sensitive as it is in XML.
 
-\pagebreak
 \section{Data file layout}
 An AFF file has:
 \bi
@@ -333,7 +332,6 @@ value if it does not.}
 \RetVal{Return a pointer to a \ctext{struct AffWriter\_s}. The status must be checked by calling
   \ctext{aff\_writer\_errstr()}.}
 
-\pagebreak
 \FuncHead{aff\_writer\_close}
 {\Syn const~char~*aff\_writer\_close (struct~AffWriter\_s~*aff);\par}
 \Desc{Finalize writing, calculate MD5 sums, write all service tables and header, 
@@ -349,6 +347,7 @@ value if it does not.}
   via \ctext{aff\_writer\_errstr()} call.}
 \RetVal{Return the string describing the error recorded in the writer object, or \NULL\ if there were no errors.}
 
+\pagebreak
 \FuncHead{aff\_writer\_stable}
 {\Syn struct~AffSTable\_s~*aff\_writer\_stable (struct~AffWriter\_s~*aff);\par}
 \Desc{Get the pointer the symbol table of the writer}
@@ -359,7 +358,6 @@ value if it does not.}
 \Desc{Get the pointer to the tree table of the writer}
 \RetVal{The pointer on success, or \NULL\ if the writer is not initialized.}
 
-\pagebreak  
 \FuncHead{aff\_writer\_root}
 {\Syn struct~AffNode\_s~*aff\_writer\_root (struct~AffWriter\_s~*aff);\par}
 \Desc{Get the handler to the root node. Any initialized writer always have a root node.}
@@ -392,6 +390,7 @@ value if it does not.}
 %  in the key node \cvar{n}.}
 %\RetVal{Return zero on success, and non-zero on failure}
 
+\pagebreak
 \FuncHead{aff\_node\_put\_{\it type}}
 {\Syn int~aff\_node\_put\_char (struct~AffWriter\_s~*aff,
   struct~AffNode\_s~*n, const~char~*d, uint32\_t~s);
@@ -411,7 +410,6 @@ value if it does not.}
 \RetVal{Return zero on success, and non-zero on failure.}
 %put a complex array ``d'' of size ``s'' into AFF file ``aff'' key node ``n'';
 
-\pagebreak
 \subsection{Reader}
 
 \FuncHead{aff\_reader}
@@ -428,6 +426,7 @@ value if it does not.}
 {\Syn void~aff\_reader\_close (struct~AffReader\_s~*aff);\par}
 \Desc{Close a file, deallocate a reader and all its tables.}
 
+\pagebreak
 \FuncHead{aff\_reader\_errstr}
 {\Syn const~char~*aff\_reader\_errstr (struct~AffReader\_s~*aff);\par}
 \Desc{Get an error string from the last failure.}
@@ -439,7 +438,6 @@ value if it does not.}
 \RetVal{Return a pointer to the symbol table, or \NULL\ if \cvar{aff} 
   is not initialized.}
   
-\pagebreak
 \FuncHead{aff\_reader\_tree}
 {\Syn struct~AffTree\_s~*aff\_reader\_tree (struct~AffReader\_s~*aff);\par}
 \Desc{Get the reader's tree table.}
@@ -451,7 +449,8 @@ value if it does not.}
 \Desc{Get the root node handler of the reader. Root node is always defined, even for empty tree.}
 \RetVal{Return a pointer to the root node handler, or \NULL\ if \cvar{aff} 
   is not initialized.}
-  
+
+\pagebreak  
 \FuncHead{aff\_reader\_chdir}
 {\Syn struct~AffNode\_s~*aff\_reader\_chdir (struct~AffReader\_s~*aff, 
   struct~AffNode\_s~*dir, const~char~*name);\par}
@@ -461,7 +460,6 @@ value if it does not.}
 \RetVal{Return a pointer to the handler or \NULL\ if it does not exist 
   or there is other failure.}
 
-\pagebreak
 \FuncHead{aff\_node\_get\_{\it type}}
 {\Syn int~aff\_node\_get\_char (const~struct~AffReader\_s~*aff, 
   const~struct~AffNode\_s~*n, char *d,~uint32\_t~s);\par
@@ -480,6 +478,7 @@ value if it does not.}
   }
 \RetVal{Return zero on success, and non-zero on failure. An failure causes an error to be stored in the reader object.}
 
+\pagebreak
 \section{AFF low level interfaces}
 The rest of AFF provides low level access to the library structures. Some of them are exported only because they are perceived to be generally useful, other are needed for non-trivial manipulation with
 the AFF objects. Users are advised to treat the functions below with respect.
@@ -493,7 +492,6 @@ the AFF objects. Users are advised to treat the functions below with respect.
 \Desc{Call function \cvar{proc} for each child of the node \cvar{n},
   and transfer \cvar{arg} as an argument. If \cvar{n} is \NULL\, nothing is done.}
 
-\pagebreak
 \FuncHead{aff\_node\_id}
 {\Syn uint64\_t~aff\_node\_id (const~struct~AffNode\_s~*tn);\par}
 \Desc{Get 64-bit node ID}
@@ -506,6 +504,7 @@ the AFF objects. Users are advised to treat the functions below with respect.
   is internal to the reader(writer) and must not be freed. If \cvar{n} is \NULL,
   return \NULL.}
 
+\pagebreak
 \FuncHead{aff\_node\_parent}
 {\Syn struct AffNode\_s~*aff\_node\_parent (const~struct~AffNode\_s~*n);\par}
 \Desc{Get the handler of node's parent. The parent of the root node is the root itself.}
@@ -526,6 +525,7 @@ the AFF objects. Users are advised to treat the functions below with respect.
 \Desc{Get the 64-bit file offset of the stored data of node \cvar{tn}. }
 \RetVal{Return the byte offset of data. Return zero if \cvar{tn} is \NULL.}
 
+\pagebreak
 \FuncHead{aff\_node\_assign}
 {\Syn int~aff\_node\_assign (struct~AffNode\_s~*node,
   enum~AffNodeType\_e~type, uint32\_t~size, uint64\_t~offset);\par}
@@ -554,13 +554,15 @@ the AFF objects. Users are advised to treat the functions below with respect.
 \RetVal{Returns the handler of the target key on success. Returns \NULL\ if the target key is
   absent and \cvar{create} is zero, or attempt to create keys failed.}
 
-
+\pagebreak
 \subsection{Tree data structure}
 
 \FuncHead{aff\_tree\_init}
-{\Syn struct~AffTree\_s~*aff\_tree\_init (void);\par}
+{\Syn struct~AffTree\_s~*aff\_tree\_init (struct~AffSTable\_s~*stable,~int~size);\par}
 \Desc{Allocate and initialize an AFF tree structure with only one node,
-  which is root. The name of the root is an empty string ``''.}
+  which is root. The name of the root is an empty string ``''. The initial
+size of the tree is supplied by \ctext{size} which will be adjusted if
+unreasonable. The user should provide \ctext{stable} to keep associated key data in.}
 \RetVal{Return a pointer to a new AFF tree, or \NULL\ if allocation failed.}
 
 \FuncHead{aff\_tree\_fini}
@@ -580,6 +582,7 @@ the AFF objects. Users are advised to treat the functions below with respect.
 {\Syn void~aff\_tree\_print (struct~AffTree\_s~*tree);\par}
 \Desc{Print AFF tree for debug.}
 
+\pagebreak
 \FuncHead{aff\_tree\_root}
 {\Syn struct~AffNode\_s~*aff\_tree\_root (const~struct~AffTree\_s~*tree);\par}
 \Desc{Get the root of the \cvar{tree}. A root is always present.}
@@ -621,8 +624,9 @@ the AFF objects. Users are advised to treat the functions below with respect.
 \subsection{Symbol table}
 
 \FuncHead{aff\_stable\_init}
-{\Syn struct~AffSTable\_s~*aff\_stable\_init (void);\par}
-\Desc{Allocate and initialize an empty symbol table.}
+{\Syn struct~AffSTable\_s~*aff\_stable\_init (int size);\par}
+\Desc{Allocate and initialize an empty symbol table. Suggested initial table
+size is \ctext{size}. The library will adjust the size if unreasonable.}
 \RetVal{Return a pointer to a new symbol table, or \NULL\ on failure.}
 
 \FuncHead{aff\_stable\_fini}
@@ -714,6 +718,7 @@ Manage treap data structure. \ctype{struct AffTreap\_s} is an opaque handler of 
 \RetVal{Return the pointer to the data associated with the \cvar{key}, 
   or \NULL\ if there is no such key or \cvar{h} is \NULL.}
 
+\pagebreak
 \FuncHead{aff\_treap\_insert}
 {\Syn int~aff\_treap\_insert (struct~AffTreap\_s~*h,
   const~void~*key, int~ksize, void~*data);\par}
@@ -722,7 +727,6 @@ Manage treap data structure. \ctype{struct AffTreap\_s} is an opaque handler of 
 \RetVal{Return zero on successful insertion, or non-zero if the key is already present in the
   treap, insertion failed, or \cvar{h} is \NULL.}
 
-\pagebreak
 \FuncHead{aff\_treap\_print}
 {\Syn void~aff\_treap\_print (struct~AffTreap\_s~*h, 
   int~(*get\_vsize)(const~void~*));\par}
