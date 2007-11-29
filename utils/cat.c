@@ -206,24 +206,13 @@ int cat_keypath( struct AffReader_s *r, const char *keypath,
     return 0;
 }
 
-char *get_next_key( char *buf, size_t bufsize, FILE *stream )
-{
-    char *key = fgets( buf, bufsize, stream );
-    if( NULL == key )
-        return NULL;
-    size_t len = strlen( key );
-    if( 0 < len && '\n' == key[len-1] )
-        key[len-1] = '\0';
-    return key;
-}
-
 int cat_keylist( struct AffReader_s *r, const char *list_fname, 
         struct cat_node_arg *arg )
 {
     FILE *list = NULL;
     if( 0 == strcmp( list_fname, "-" ) )
     {
-        list = stdin;
+            list = stdin;
         if( ferror( list ) )
         {
             fprintf( stderr, "%s: bad stdin stream\n", __func__ );
@@ -238,19 +227,40 @@ int cat_keylist( struct AffReader_s *r, const char *list_fname,
             return 1;
         }
     }
-    char *key, buf[16384];
-    while( NULL != ( key = get_next_key( buf, sizeof(buf), list ) ) )
-        if( cat_keypath( r, key, arg ) )
-            return 1;
-    int errsave = errno;
-    if( errsave )
+    char buf[16384], *fargv[1];
+    int num;
+    while( NULL != fgets( buf, sizeof(buf), list ) )
     {
-        fprintf( stderr, "%s: %s: %s\n", 
-                __func__, list_fname, strerror( errsave ) );
-        return 1;
+        if( '\n' != buf[strlen(buf)-1] )
+        {
+            fprintf( stderr, "%s: line too long, skipping\n", __func__ );
+            while( NULL != fgets( buf, sizeof(buf), list ) )
+                if( '\n' == buf[strlen(buf)-1] )
+                    break;
+            continue;
+        }
+        num = split_farg( buf, 1, fargv );
+        if( num < 0 )
+        {
+            fprintf( stderr, "%s: unexpected result of split_farg; exiting\n",
+                    __func__ );
+            goto errclean_r;
+        }
+        if( num == 0 )
+            continue;
+        if( cat_keypath( r, fargv[0], arg ) )
+        {
+            fprintf( stderr, "%s: [%s]\n", __func__, fargv[0] );
+            goto errclean_r;
+        }
     }
+    
     fclose( list );
     return 0;
+    
+errclean_r:
+    fclose( list );
+    return 1;
 }
 
 int x_cat( int argc, char *argv[] )

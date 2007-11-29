@@ -42,7 +42,7 @@ struct AffNode_s *chdir_path(struct AffReader_s *r,
     if( NULL == r ||
         NULL == key_path )
         return NULL;
-    char *kpath = malloc( strlen( key_path ) );
+    char *kpath = malloc( strlen( key_path ) + 1 );
     strcpy( kpath, key_path );
     char *s, *end = kpath;
     
@@ -68,7 +68,7 @@ struct AffNode_s *mkdir_path( struct AffWriter_s *w,
     if( NULL == w ||
         NULL == key_path )
         return NULL;
-    char *kpath = malloc( strlen( key_path ) );
+    char *kpath = malloc( strlen( key_path ) + 1 );
     strcpy( kpath, key_path );
     char *s, *end = kpath;
     

@@ -120,7 +120,7 @@ char *mk_tmp_filename( const char *mark, const char *fname )
 int split_farg( char *buf, int fargc, char ** fargv )
 {
     int part = 1;
-    for( size_t i = 1 ; i < fargc ; ++i )
+    for( int i = 1 ; i < fargc ; ++i )
         fargv[i] = NULL;
     fargv[0] = buf;
     int prev_bslash = 0,
