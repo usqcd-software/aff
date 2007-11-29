@@ -11,7 +11,7 @@ enum {
     AFF_SIG_OFF_SIZE  =  28,
     AFF_SIG_SIZE      =  32,
     AFF_HEADER_SIZE1  = 144, /* the full header size V1 */
-    AFF_HEADER_SIZE2  = 156  /* the full header size V2 */
+    AFF_HEADER_SIZE2  = 168  /* the full header size V2 */
 };
 
 #define AFF_SIG1       "LHPC AFF version 1.0"
@@ -20,7 +20,7 @@ enum {
 struct WSection_s {
     uint64_t         start;
     uint64_t         size;
-    uint32_t         records;
+    uint64_t         records;
     struct AffMD5_s  md5;
 };
 
@@ -43,7 +43,7 @@ struct AffWriter_s {
 struct RSection_s {
     uint64_t         start;
     uint64_t         size;
-    uint32_t         records;
+    uint64_t         records;
     uint8_t          md5[16];
 };
 

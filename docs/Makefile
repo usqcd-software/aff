@@ -18,6 +18,8 @@ clean:
 	$(RM) $(sources:%.tex=%.log)
 	$(RM) $(sources:%.tex=%.out)
 	$(RM) $(sources:%.tex=%.toc)
+	$(RM) $(sources:%.tex=%.ttt)
+	$(RM) $(sources:%.tex=%.lot)
 
 realclean: clean
 	$(RM) $(sources:%.tex=%.pdf)

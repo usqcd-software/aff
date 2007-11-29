@@ -20,8 +20,6 @@ time_all() {
   echo '***** Timing on file ' $1
   echo '*** file stat'
   ls -l $1
-  echo '*** file size in MB'
-  ls --block-size=1MB -s $1
   echo '*** data nodes'
   $AFF ls -R $1  | grep complex | grep '^/' | wc -l
   echo '*** checking time'

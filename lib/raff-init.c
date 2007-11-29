@@ -34,6 +34,7 @@ unpack1(struct AffReader_s *aff, struct RSection_s *section,
 	goto error;
     if (AFF_HEADER_SIZE1 - (buf - ptr) < 16)
 	goto error;
+    section->records = 0;
     memcpy(&section->md5, ptr, 16);
 
     return;
@@ -59,7 +60,7 @@ unpack2(struct AffReader_s *aff, struct RSection_s *section,
     ptr = aff_decode_u64(&section->size, ptr, size - (ptr - start));
     if (ptr == 0)
 	goto error;
-    ptr = aff_decode_u32(&section->records, ptr, size - (ptr - start));
+    ptr = aff_decode_u64(&section->records, ptr, size - (ptr - start));
     if (ptr == 0)
 	goto error;
     if (AFF_HEADER_SIZE2 - (buf - ptr) < 16)
@@ -166,8 +167,8 @@ read_header2(struct AffReader_s *aff,
     }
     
     unpack2(aff, &aff->data_hdr,   buf,  0, "V2 data header unpack failed");
-    unpack2(aff, &aff->stable_hdr, buf, 36, "V2 stable header unpack failed");
-    unpack2(aff, &aff->tree_hdr,   buf, 72, "V2 tree header unpack failed");
+    unpack2(aff, &aff->stable_hdr, buf, 40, "V2 stable header unpack failed");
+    unpack2(aff, &aff->tree_hdr,   buf, 80, "V2 tree header unpack failed");
     return aff->error? 1: 0;
 }
 
@@ -180,7 +181,7 @@ aff_reader(const char *file_name)
     uint8_t md5_read[16];
     uint8_t *sb = 0;
     uint8_t *sym = 0;
-    uint32_t rec_count;
+    uint64_t rec_count;
     uint32_t byte_count;
     uint64_t tree_size;
     uint32_t sig_size;
@@ -279,6 +280,7 @@ aff_reader(const char *file_name)
 	goto error;
 #endif
 
+    /* load the stable */
     rec_count = aff->stable_hdr.records; /* = 0 in V1 */
     byte_count = (uint32_t)aff->stable_hdr.size;
     if (byte_count != aff->stable_hdr.size) {
@@ -291,7 +293,6 @@ aff_reader(const char *file_name)
 	goto error;
     }
 
-    /* load the stable */
     if (aff_file_setpos(aff->file, aff->stable_hdr.start) != 0) {
 	aff->error = "Positioning on the string table failed";
 	goto error;
@@ -332,11 +333,7 @@ aff_reader(const char *file_name)
     sb = 0;
 
     /* load the tree */
-    rec_count = (uint32_t)(aff->tree_hdr.records);
-    if (rec_count != (uint32_t)(aff->tree_hdr.records)) {
-	aff->error = "AFF tree too large";
-	goto error;
-    }
+    rec_count = aff->tree_hdr.records; /* = 0 in V1 */
     aff->tree = aff_tree_init(aff->stable, rec_count);
     if (aff->tree == 0) {
 	aff->error = "Not enough memory for tree";

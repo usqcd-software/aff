@@ -76,7 +76,7 @@ out_node(struct AffNode_s *node, void *arg)
 static void
 pack(struct AffWriter_s *aff, struct WSection_s *section, char *error_msg)
 {
-    uint8_t block[8+8+4+16];
+    uint8_t block[8+8+8+16];
     uint8_t *buf;
     uint32_t size;
 
@@ -88,7 +88,7 @@ pack(struct AffWriter_s *aff, struct WSection_s *section, char *error_msg)
     size = sizeof (block) - (buf - &block[0]);
     buf = aff_encode_u64(buf, size, section->size);
     size = sizeof (block) - (buf - &block[0]);
-    buf = aff_encode_u32(buf, size, section->records);
+    buf = aff_encode_u64(buf, size, section->records);
     size = (buf - &block[0]);
     if (buf == 0 || sizeof (block) - size < 16) {
 	aff->error = "Section header encoding overrun";
