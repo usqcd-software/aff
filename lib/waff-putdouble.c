@@ -45,5 +45,6 @@ aff_node_put_double(struct AffWriter_s *aff,
 	aff->data_hdr.size += sizeof (buf);
 	aff->position += sizeof (buf);
     }
+    aff->data_hdr.records++;
     return 0;
 }

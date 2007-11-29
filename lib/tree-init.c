@@ -7,9 +7,14 @@
 #include "tree-i.h"
 
 struct AffTree_s *
-aff_tree_init(struct AffSTable_s *stable)
+aff_tree_init(struct AffSTable_s *stable, int size)
 {
-    struct AffTree_s *tt = malloc(sizeof (struct AffTree_s));
+    struct AffTree_s *tt;
+
+    if (size < BLOCK_SIZE)
+	size = BLOCK_SIZE;
+    tt = malloc(sizeof (struct AffTree_s)
+		+ (size - 1) * sizeof (struct AffNode_s));
 
     if (tt == 0)
 	return 0;
@@ -30,7 +35,6 @@ aff_tree_init(struct AffSTable_s *stable)
     tt->root.offset = 0;
     tt->root.next = 0;
     tt->root.children = 0;
-    aff_tree_iblock(&tt->block, 1);
-
+    aff_tree_iblock(&tt->block, 1, size);
     return tt;
 }

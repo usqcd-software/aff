@@ -12,7 +12,7 @@
 struct AffSTable_s;
 struct AffSymbol_s;
 
-struct AffSTable_s *aff_stable_init(void);
+struct AffSTable_s *aff_stable_init(int size);
 void *aff_stable_fini(struct AffSTable_s *st);
 void aff_stable_print(const struct AffSTable_s *st);
 const struct AffSymbol_s *aff_stable_lookup(const struct AffSTable_s *st,

@@ -18,7 +18,7 @@ struct AffSymbol_s;
 struct AffTree_s;
 struct AffSTable_s;
 
-struct AffTree_s *aff_tree_init(struct AffSTable_s *);
+struct AffTree_s *aff_tree_init(struct AffSTable_s *, int size);
 void *aff_tree_fini(struct AffTree_s *tree);
 void aff_tree_foreach(const struct AffTree_s *tree,
 		      void (*proc)(struct AffNode_s *node, void *arg),

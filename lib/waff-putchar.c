@@ -35,6 +35,7 @@ aff_node_put_char(struct AffWriter_s *aff,
     aff_md5_update(&aff->data_hdr.md5, (const uint8_t *)d, s);
     aff->data_hdr.size += s;
     aff->position += s;
+    aff->data_hdr.records++;
 
     return 0;
 }

@@ -12,7 +12,7 @@
 struct AffWriter_s *
 aff_writer(const char *file_name)
 {
-    uint8_t dummy_header[AFF_HEADER_SIZE];
+    uint8_t dummy_header[AFF_HEADER_SIZE2];
     struct AffWriter_s *aff = malloc(sizeof (struct AffWriter_s));
 
     if (aff == 0)
@@ -26,20 +26,20 @@ aff_writer(const char *file_name)
 	return aff;
     }
 
-    aff->stable = aff_stable_init();
+    aff->stable = aff_stable_init(0);
     if (aff->stable == 0) {
 	aff->error = "Not enough memory for stable in aff_writer()";
 	goto error;
     }
 
-    aff->tree = aff_tree_init(aff->stable);
+    aff->tree = aff_tree_init(aff->stable, 0);
     if (aff->tree == 0) {
 	aff->error = "Not enough memory for tree in aff_writer()";
 	goto error;
     }
 
-    memset(dummy_header, 0, AFF_HEADER_SIZE);
-    if (fwrite(dummy_header, AFF_HEADER_SIZE, 1, aff->file) != 1) {
+    memset(dummy_header, 0, AFF_HEADER_SIZE2);
+    if (fwrite(dummy_header, AFF_HEADER_SIZE2, 1, aff->file) != 1) {
 	aff->error = "Error writing dummy header in aff_writer()";
 	goto error;
     }
@@ -49,10 +49,11 @@ aff_writer(const char *file_name)
 	goto error;
     }
 
-    aff->position = AFF_HEADER_SIZE;
+    aff->position = AFF_HEADER_SIZE2;
     aff_md5_init(&aff->data_hdr.md5);
     aff->data_hdr.size = 0;
-    aff->data_hdr.start = AFF_HEADER_SIZE;
+    aff->data_hdr.records = 0;
+    aff->data_hdr.start = AFF_HEADER_SIZE2;
 
     return aff;
 

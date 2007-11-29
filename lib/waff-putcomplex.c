@@ -51,5 +51,6 @@ aff_node_put_complex(struct AffWriter_s *aff,
 	aff->data_hdr.size += ptr - buf;
 	aff->position += ptr - buf;
     }
+    aff->data_hdr.records++;
     return 0;
 }

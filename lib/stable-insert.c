@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "treap.h"
 #include "stable-i.h"
 
@@ -19,11 +20,15 @@ aff_stable_insert(struct AffSTable_s *st, const char *name)
     if (sym)
 	return sym;
 
-    if (st->last_block->used == BLOCK_SIZE) {
-	b = malloc(sizeof (struct Block_s));
+    if (st->last_block->used == st->last_block->size) {
+	int size = (st->last_block->size * 5) / 4;
+
+	assert (size > st->last_block->size);
+	b = malloc(sizeof (struct Block_s)
+		   + (size - 1) * sizeof (struct AffSymbol_s));
 	if (b == 0)
 	    return 0;
-	aff_stable_iblock(b, st->size);
+	aff_stable_iblock(b, st->size, size);
 	st->last_block->next = b;
 	st->last_block = b;
     }

@@ -43,11 +43,13 @@
 
 \begin{document}
 \centerline{\huge\bf AFF lattice data storage format}
+\vspace{15pt}
+\centerline{\huge\bf Version 2}
 \vspace{20pt}
 \centerline{\it Andrew~V.~Pochinsky, Sergey~N.~Syritsyn}
 \centerline{\it MIT CTP, Cambridge, MA}
 \vspace{10pt}
-\centerline{September 11, 2007}
+\centerline{November 28, 2007}
 \vspace{20pt}
 
 \noindent This document describes the AFF data storage format. 
@@ -64,7 +66,6 @@ This data usually consists of enormous number of small pieces, for example, corr
 each operator, each momentum and each in/out state.
 Present approach is to store each piece\footnote{As it is done by ADAT stripping utilities}
 as text in a separate file which has a fully descriptive name. 
-
 Although this is both convenient for analysis and accessible by a text editor, text format leads
 to a significant space overhead. 
 In addition, some file systems, like PVFS, work badly with
@@ -82,7 +83,6 @@ To assure the data validity, both data and service information is checked agains
 MD5 checksum.
 
 
-
 \section{Suggested AFF usage}
 
 We suggest replacing the output of ADAT strippers with an AFF file format. 
@@ -90,7 +90,7 @@ Complicated file names will be replaced with hierarchical key names.
 The actual set of key names must be convenient for both interactive use and 
 scripts for automatic data processing.
 
-Scripts will access the data in an AFF file through command line utilities which will get the
+Scripts will access the data in an AFF file through command line utilities which get the
 data from a file and output the required data in appropriate (e.g., text) form. C/C++ analysis
 codes will access the data through the AFF library, which will return data in the form
 appropriate for a given platform.
@@ -101,7 +101,8 @@ insertion of data, and deleting entries. Probably, conversion from XML to ADAT w
 but only for XML files with unique keys.
 
 \section{Command line utility}
-There is a command line utility, \libname{lhpc-aff} that allows one to manipulate AFF files from the shell, and has its own help.
+There is a command line utility, \libname{lhpc-aff} that allows one to manipulate AFF files from the shell,
+and has its own help.
 
 \section{Platform-independent data}
 Both data and service information is stored in platform-independent format. 
@@ -145,11 +146,10 @@ we write here as a UNIX file name: \ctext{/key1/key2/.../keyN}. The top node in 
 \langle subkey \rangle & ::= & (\langle Letter \rangle | \verb|_| | \verb|:| ) | \langle nameChar \rangle^{*} \\
 \langle nameChar \rangle & ::= & \langle Letter \rangle | \langle Digit \rangle | \verb|.| | \verb|-| | \verb|_| | \verb|:|
 \end{eqnarray*}
-The subkeys are case-sensitive as in XML.
+The subkeys are case-sensitive as it is in XML.
 
-
+\pagebreak
 \section{Data file layout}
-
 An AFF file has:
 \bi
 \item a header, describing the numeric storage format, tables and data position and checksums; 
@@ -165,18 +165,19 @@ An AFF file starts with a header, then there is usually a data section, and symb
 are in the end of the file. It should be noted that this order of sections in the AFF file is not mandated, a file is arbitrary places section is valid (even if they overlap.)
 
 \subsection{Header}
-
+There are two versions of the file format now. The current version of the
+library reads both formats but writers only version 2 AFF files.
 \begin{table}[h]
 \bc
 \caption{Header layout}\label{tab:header}
-\begin{tabular}{|l|c|} \hline
- & Size, bytes \\ \hline\hline
-Signature & 32 \\ \hline
-Symbol table header & 32 \\ \hline
-Tree header & 32 \\ \hline
-Data header & 32 \\ \hline
-Header MD5 sum & 16 \\ \hline\hline
-Total & 144 \\ \hline
+\begin{tabular}{|l|c|c|} \hline
+ & Size, bytes (V1) & Size, bytes (V2)\\ \hline\hline
+Signature & 32 & 32 \\ \hline
+Symbol table header & 32 & 36 \\ \hline
+Tree header & 32 & 36 \\ \hline
+Data header & 32 & 36 \\ \hline
+Header MD5 sum & 16 & 16 \\ \hline\hline
+Total & 144 & 156 \\ \hline
 \end{tabular}
 \ec
 \end{table}
@@ -187,28 +188,47 @@ Total & 144 \\ \hline
 \begin{tabular}{|l|c|} \hline
  & Size, bytes \\ \hline\hline
 File version string, null-terminated &  21\\ \hline
-Bits in Char & 1 \\ \hline
 Bits in Double & 1 \\ \hline
+Double radix & 1 \\ \hline
 Bits in Double mantissa & 1 \\ \hline
-Exponents in Double & 4 \\ \hline
+Max exponent in Double & 2 \\ \hline
+Negative min exponent in Double & 2 \\ \hline
 Header size in bytes & 4 \\ \hline\hline
 Total & 32 \\ \hline
+\end{tabular}
+\ec
+\end{table}
+Here are signature strings for historical version of the file format and the
+current version.
+\begin{table}[h]
+\bc
+\caption{Version strings}\label{tab:versions}
+\begin{tabular}{|l|c|} \hline
+ Version & Signature string \\ \hline\hline
+ V1 & \verb|"LHPC AFF version 1.0"| \\ \hline
+ V2 & \verb|"LHPC AFF version 2.0"| \\ \hline
 \end{tabular}
 \ec
 \end{table}
 
 
 \subsection{Symbol table, tree, and data headers}
-All three section headers have the same format described in table~\ref{tab:shdr}. Section offset and size is stored in big-endian order regardless of the machine endianess.
+All three section headers have the same format described in
+table~\ref{tab:shdr}. Section offset and size is stored in big-endian order
+regardless of the machine endianess.
+Version 2 adds a number of records into each section header to make reading
+of the AFF data faster. The current version of the library reads both V1 and V2
+files.
 \begin{table}[h]
 \bc
 \caption{Symbol table, tree, and data header layout}\label{tab:shdr}
-\begin{tabular}{|l|c|} \hline
- & Size, bytes \\ \hline\hline
-Offset  & 8 \\ \hline
-Size in bytes & 8 \\ \hline
-Section MD5 sum & 16 \\ \hline
-Total & 32 \\ \hline
+\begin{tabular}{|l|c|c|} \hline
+ & Size, bytes (V1) & Size, bytes (V2) \\ \hline\hline
+Offset  & 8 & 8\\ \hline
+Size in bytes & 8 & 8\\ \hline
+Number of records & 0 & 4\\ \hline
+Section MD5 sum & 16 & 16 \\ \hline
+Total & 32 & 36 \\ \hline
 \end{tabular}
 \ec
 \end{table}
@@ -313,7 +333,7 @@ value if it does not.}
 \RetVal{Return a pointer to a \ctext{struct AffWriter\_s}. The status must be checked by calling
   \ctext{aff\_writer\_errstr()}.}
 
-
+\pagebreak
 \FuncHead{aff\_writer\_close}
 {\Syn const~char~*aff\_writer\_close (struct~AffWriter\_s~*aff);\par}
 \Desc{Finalize writing, calculate MD5 sums, write all service tables and header, 
@@ -338,7 +358,8 @@ value if it does not.}
 {\Syn struct~AffTree\_s~*aff\_writer\_tree (struct~AffWriter\_s *aff);\par}
 \Desc{Get the pointer to the tree table of the writer}
 \RetVal{The pointer on success, or \NULL\ if the writer is not initialized.}
-  
+
+\pagebreak  
 \FuncHead{aff\_writer\_root}
 {\Syn struct~AffNode\_s~*aff\_writer\_root (struct~AffWriter\_s~*aff);\par}
 \Desc{Get the handler to the root node. Any initialized writer always have a root node.}
@@ -390,6 +411,7 @@ value if it does not.}
 \RetVal{Return zero on success, and non-zero on failure.}
 %put a complex array ``d'' of size ``s'' into AFF file ``aff'' key node ``n'';
 
+\pagebreak
 \subsection{Reader}
 
 \FuncHead{aff\_reader}
@@ -417,6 +439,7 @@ value if it does not.}
 \RetVal{Return a pointer to the symbol table, or \NULL\ if \cvar{aff} 
   is not initialized.}
   
+\pagebreak
 \FuncHead{aff\_reader\_tree}
 {\Syn struct~AffTree\_s~*aff\_reader\_tree (struct~AffReader\_s~*aff);\par}
 \Desc{Get the reader's tree table.}
@@ -438,6 +461,7 @@ value if it does not.}
 \RetVal{Return a pointer to the handler or \NULL\ if it does not exist 
   or there is other failure.}
 
+\pagebreak
 \FuncHead{aff\_node\_get\_{\it type}}
 {\Syn int~aff\_node\_get\_char (const~struct~AffReader\_s~*aff, 
   const~struct~AffNode\_s~*n, char *d,~uint32\_t~s);\par
@@ -469,6 +493,7 @@ the AFF objects. Users are advised to treat the functions below with respect.
 \Desc{Call function \cvar{proc} for each child of the node \cvar{n},
   and transfer \cvar{arg} as an argument. If \cvar{n} is \NULL\, nothing is done.}
 
+\pagebreak
 \FuncHead{aff\_node\_id}
 {\Syn uint64\_t~aff\_node\_id (const~struct~AffNode\_s~*tn);\par}
 \Desc{Get 64-bit node ID}
@@ -697,6 +722,7 @@ Manage treap data structure. \ctype{struct AffTreap\_s} is an opaque handler of 
 \RetVal{Return zero on successful insertion, or non-zero if the key is already present in the
   treap, insertion failed, or \cvar{h} is \NULL.}
 
+\pagebreak
 \FuncHead{aff\_treap\_print}
 {\Syn void~aff\_treap\_print (struct~AffTreap\_s~*h, 
   int~(*get\_vsize)(const~void~*));\par}

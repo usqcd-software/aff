@@ -3,7 +3,7 @@
 #include "stable.h"
 
 #ifdef AFF_DEBUG
-#define BLOCK_SIZE 3
+#define BLOCK_SIZE 4 /* The minimal size for 10% overhead scaling */
 #else
 #define BLOCK_SIZE 1024
 #endif /* defined(AFF_DEBUG) */
@@ -17,17 +17,18 @@ struct Block_s {
     struct Block_s     *next;
     uint32_t            start;
     uint32_t            used;
-    struct AffSymbol_s  symbol[BLOCK_SIZE];
+    uint32_t            size;
+    struct AffSymbol_s  symbol[1]; /* must be the last. More data follow */
 };
 
 struct AffSTable_s {
     struct AffTreap_s *treap;
     uint32_t           size;
-    struct Block_s     block;
     struct Block_s    *last_block;
+    struct Block_s     block; /* must be the last. */
 };
 
-void aff_stable_iblock(struct Block_s *block, int start);
+void aff_stable_iblock(struct Block_s *block, int start, int size);
 
 
 #endif /* !defined(MARK_ccee59e4_4306_46b9_a6f0_df315a0233fe) */

@@ -29,6 +29,7 @@ out_string(const struct AffSymbol_s *symbol, void *arg)
 	aff_md5_update(&aff->stable_hdr.md5, (const uint8_t *)name, size);
 	aff->stable_hdr.size += size;
 	aff->position += size;
+	aff->stable_hdr.records++;
     }
 }
 
@@ -68,13 +69,14 @@ out_node(struct AffNode_s *node, void *arg)
 	aff_md5_update(&aff->tree_hdr.md5, block, size);
 	aff->tree_hdr.size += size;
 	aff->position += size;
+	aff->tree_hdr.records++;
     }
 }
 
 static void
 pack(struct AffWriter_s *aff, struct WSection_s *section, char *error_msg)
 {
-    uint8_t block[8+8+16];
+    uint8_t block[8+8+4+16];
     uint8_t *buf;
     uint32_t size;
 
@@ -85,6 +87,8 @@ pack(struct AffWriter_s *aff, struct WSection_s *section, char *error_msg)
     buf = aff_encode_u64(&block[0], size, section->start);
     size = sizeof (block) - (buf - &block[0]);
     buf = aff_encode_u64(buf, size, section->size);
+    size = sizeof (block) - (buf - &block[0]);
+    buf = aff_encode_u32(buf, size, section->records);
     size = (buf - &block[0]);
     if (buf == 0 || sizeof (block) - size < 16) {
 	aff->error = "Section header encoding overrun";
@@ -105,7 +109,7 @@ pack(struct AffWriter_s *aff, struct WSection_s *section, char *error_msg)
 const char *
 aff_writer_close(struct AffWriter_s *aff)
 {
-    uint8_t buffer[AFF_HEADER_SIZE];
+    uint8_t buffer[AFF_HEADER_SIZE2];
     uint8_t *ptr;
     uint32_t size;
 
@@ -117,6 +121,7 @@ aff_writer_close(struct AffWriter_s *aff)
 
     aff->stable_hdr.start = aff->position;
     aff->stable_hdr.size = 0;
+    aff->stable_hdr.records = 0;
     aff_md5_init(&aff->stable_hdr.md5);
     aff_stable_foreach(aff->stable, out_string, aff);
     if (aff->error)
@@ -124,6 +129,7 @@ aff_writer_close(struct AffWriter_s *aff)
 
     aff->tree_hdr.start = aff->position;
     aff->tree_hdr.size = 0;
+    aff->tree_hdr.records = 0;
     aff_md5_init(&aff->tree_hdr.md5);
     aff_tree_foreach(aff->tree, out_node, aff);
     if (aff->error)
@@ -135,19 +141,20 @@ aff_writer_close(struct AffWriter_s *aff)
     }
 
     aff_md5_init(&aff->header_md5);
-    aff->header_size = strlen((const char *)aff_signature) + 1;
-    if (fwrite(aff_signature, aff->header_size, 1, aff->file) != 1) {
+    aff->header_size = strlen((const char *)aff_signature2) + 1;
+    if (fwrite(aff_signature2, aff->header_size, 1, aff->file) != 1) {
 	aff->error = "AFF Signature writing erorr";
 	goto end;
     }
-    aff_md5_update(&aff->header_md5, aff_signature, aff->header_size);
+    aff_md5_update(&aff->header_md5, aff_signature2, aff->header_size);
 
     buffer[0] = sizeof (double) * CHAR_BIT;
     buffer[1] = FLT_RADIX;
     buffer[2] = DBL_MANT_DIG;
     ptr = aff_encode_u32(buffer + 3, sizeof (buffer) - 3,
 			 (DBL_MAX_EXP << 16) | (- DBL_MIN_EXP));
-    ptr = aff_encode_u32(ptr, sizeof(buffer) - (ptr - buffer), AFF_HEADER_SIZE);
+    ptr = aff_encode_u32(ptr, sizeof(buffer) - (ptr - buffer),
+			 AFF_HEADER_SIZE2);
     if (ptr == 0) {
 	aff->error = "Can't encode DBL_MIN_EXP";
 	goto end;
@@ -174,7 +181,7 @@ aff_writer_close(struct AffWriter_s *aff)
     }
 
     /* This is an assert() really */
-    if (aff->header_size != AFF_HEADER_SIZE) {
+    if (aff->header_size != AFF_HEADER_SIZE2) {
 	aff->error = "AFF INTERNAL ERROR: header size mismatch";
 	goto end;
     }

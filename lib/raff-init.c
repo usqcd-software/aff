@@ -14,15 +14,12 @@
 #include "io.h"
 #include "aff-i.h"
 
-#define STRING_BUF0  1024
-#define STRING_BUFx  1024
-
 static void
-unpack(struct AffReader_s *aff, struct RSection_s *section,
-       uint8_t buf[AFF_HEADER_SIZE], int off,
+unpack1(struct AffReader_s *aff, struct RSection_s *section,
+       uint8_t buf[AFF_HEADER_SIZE1], int off,
        const char *error_msg)
 {
-    uint32_t size = AFF_HEADER_SIZE - off;
+    uint32_t size = AFF_HEADER_SIZE1 - off;
     uint8_t *start = buf + off;
     uint8_t *ptr;
     
@@ -35,7 +32,7 @@ unpack(struct AffReader_s *aff, struct RSection_s *section,
     ptr = aff_decode_u64(&section->size, ptr, size - (ptr - start));
     if (ptr == 0)
 	goto error;
-    if (AFF_HEADER_SIZE - (buf - ptr) < 16)
+    if (AFF_HEADER_SIZE1 - (buf - ptr) < 16)
 	goto error;
     memcpy(&section->md5, ptr, 16);
 
@@ -44,21 +41,157 @@ error:
     aff->error = error_msg;
 }
 
+static void
+unpack2(struct AffReader_s *aff, struct RSection_s *section,
+       uint8_t buf[AFF_HEADER_SIZE2], int off,
+       const char *error_msg)
+{
+    uint32_t size = AFF_HEADER_SIZE2 - off;
+    uint8_t *start = buf + off;
+    uint8_t *ptr;
+    
+    if (aff->error)
+	return;
+
+    ptr = aff_decode_u64(&section->start, start, size);
+    if (ptr == 0)
+	goto error;
+    ptr = aff_decode_u64(&section->size, ptr, size - (ptr - start));
+    if (ptr == 0)
+	goto error;
+    ptr = aff_decode_u32(&section->records, ptr, size - (ptr - start));
+    if (ptr == 0)
+	goto error;
+    if (AFF_HEADER_SIZE2 - (buf - ptr) < 16)
+	goto error;
+    memcpy(&section->md5, ptr, 16);
+
+    return;
+error:
+    aff->error = error_msg;
+}
+
+static int
+read_sig(struct AffReader_s *aff,
+	 const uint8_t sig[AFF_SIG_SIZE],
+	 const uint8_t *aff_sig)
+{
+    uint32_t d_exp;
+    
+    if (memcmp(sig, aff_sig, AFF_SIG_ID_SIZE) != 0) {
+	aff->error = "AFF signature mismatch";
+	return 1;
+    }
+
+    if (sig[AFF_SIG_OFF_DBITS] != sizeof (double) * CHAR_BIT) {
+	aff->error = "AFF size of double mismatch";
+	return 1;
+    }
+    if (sig[AFF_SIG_OFF_RADIX] != FLT_RADIX || FLT_RADIX != 2) {
+	aff->error = "AFF double radix mismatch";
+	return 1;
+    }
+    if (sig[AFF_SIG_OFF_MANT] != DBL_MANT_DIG) {
+	aff->error = "AFF double mantissa size mismatch";
+	return 1;
+    }
+
+    if (aff_decode_u32(&d_exp,
+		       (uint8_t *)sig + AFF_SIG_OFF_EXP,
+		       AFF_SIG_SIZE - AFF_SIG_OFF_EXP) == 0) {
+	aff->error = "AFF error decoding double exponent sizes";
+	return 1;
+    }
+    if ((d_exp >> 16 != DBL_MAX_EXP) || ((d_exp & 0xffff) != (-DBL_MIN_EXP))) {
+	aff->error = "AFF exponent limits mismatch";
+	return 1;
+    }
+    return 0;
+}
+
+static int
+read_header1(struct AffReader_s *aff,
+	     const uint8_t sig[AFF_SIG_SIZE])
+{
+    struct AffMD5_s md5;
+    uint8_t md5_read[16];
+    uint8_t buf[AFF_HEADER_SIZE1 - AFF_SIG_SIZE];
+
+    if (read_sig(aff, sig, aff_signature1))
+	return 1;
+
+    if (fread(buf, sizeof (buf), 1, aff->file) != 1) {
+	aff->error = "Reading V1 header failed";
+	return 1;
+    }
+
+    aff_md5_init(&md5);
+    aff_md5_update(&md5, sig, AFF_SIG_SIZE);
+    aff_md5_update(&md5, buf, sizeof (buf) - 16);
+    aff_md5_final(md5_read, &md5);
+    if (memcmp(md5_read, buf + sizeof (buf) - 16, 16) != 0) {
+	aff->error = "V1 header checksum failed";
+	return 1;
+    }
+    
+    unpack1(aff, &aff->data_hdr,   buf,  0, "V1 data header unpack failed");
+    unpack1(aff, &aff->stable_hdr, buf, 32, "V1 stable header unpack failed");
+    unpack1(aff, &aff->tree_hdr,   buf, 64, "V1 tree header unpack failed");
+    return aff->error? 1: 0;
+}
+
+static int
+read_header2(struct AffReader_s *aff,
+	     const uint8_t sig[AFF_SIG_SIZE])
+{
+    struct AffMD5_s md5;
+    uint8_t md5_read[16];
+    uint8_t buf[AFF_HEADER_SIZE2 - AFF_SIG_SIZE];
+
+    if (read_sig(aff, sig, aff_signature2))
+	return 1;
+
+    if (fread(buf, sizeof (buf), 1, aff->file) != 1) {
+	aff->error = "Reading V2 header failed";
+	return 1;
+    }
+
+    aff_md5_init(&md5);
+    aff_md5_update(&md5, sig, AFF_SIG_SIZE);
+    aff_md5_update(&md5, buf, sizeof (buf) - 16);
+    aff_md5_final(md5_read, &md5);
+    if (memcmp(md5_read, buf + sizeof (buf) - 16, 16) != 0) {
+	aff->error = "V2 header checksum failed";
+	return 1;
+    }
+    
+    unpack2(aff, &aff->data_hdr,   buf,  0, "V2 data header unpack failed");
+    unpack2(aff, &aff->stable_hdr, buf, 36, "V2 stable header unpack failed");
+    unpack2(aff, &aff->tree_hdr,   buf, 72, "V2 tree header unpack failed");
+    return aff->error? 1: 0;
+}
+
 struct AffReader_s *
 aff_reader(const char *file_name)
 {
     struct AffReader_s *aff = malloc(sizeof (struct AffReader_s));
-    uint8_t buf[AFF_HEADER_SIZE];
     struct AffMD5_s md5;
+    uint8_t file_sig[AFF_SIG_SIZE];
     uint8_t md5_read[16];
+    uint8_t *sb = 0;
+    uint8_t *sym = 0;
+    uint32_t rec_count;
+    uint32_t byte_count;
+    uint64_t tree_size;
+    uint32_t sig_size;
+#if 0    
     uint32_t data;
     int size;
-    uint8_t *sb;
     int sb_size;
     int sb_used;
     uint64_t string_size;
-    uint64_t tree_size;
-    
+#endif    
+
     if (aff == 0)
 	return 0;
 
@@ -69,16 +202,31 @@ aff_reader(const char *file_name)
 	aff->error = strerror(errno);
 	return aff;
     }
-    aff->stable = aff_stable_init();
-    if (aff->stable == 0) {
-	aff->error = "Not enough memory for stable";
+    if (fread(file_sig, AFF_SIG_SIZE, 1, aff->file) != 1) {
+	aff->error = "Reading AFF signature failed";
 	goto error;
     }
-    aff->tree = aff_tree_init(aff->stable);
-    if (aff->tree == 0) {
-	aff->error = "Not enough memory for tree";
+    if (aff_decode_u32(&sig_size,
+		       file_sig + AFF_SIG_OFF_SIZE,
+		       AFF_SIG_SIZE - AFF_SIG_OFF_SIZE) == 0) {
+	aff->error = "AFF signature size decoding failed";
 	goto error;
     }
+
+    switch (sig_size) {
+    case AFF_HEADER_SIZE1:
+	if (read_header1(aff, file_sig))
+	    goto error;
+	break;
+    case AFF_HEADER_SIZE2:
+	if (read_header2(aff, file_sig))
+	    goto error;
+	break;
+    default:
+	aff->error = "Bad AFF header";
+	goto error;
+    }
+#if 0
     if (fread(buf, sizeof (buf), 1, aff->file) != 1) {
 	aff->error = "Reading AFF header failed";
 	goto error;
@@ -126,57 +274,72 @@ aff_reader(const char *file_name)
     unpack(aff, &aff->data_hdr,   buf, size+11, "data header unpack failed");
     unpack(aff, &aff->stable_hdr, buf, size+43, "stable header unpack failed");
     unpack(aff, &aff->tree_hdr,   buf, size+75, "tree header unpack failed");
+
     if (aff->error)
 	goto error;
+#endif
 
+    rec_count = aff->stable_hdr.records; /* = 0 in V1 */
+    byte_count = (uint32_t)aff->stable_hdr.size;
+    if (byte_count != aff->stable_hdr.size) {
+	aff->error = "Stable too large";
+	goto error;
+    }
+    aff->stable = aff_stable_init(rec_count);
+    if (aff->stable == 0) {
+	aff->error = "Not enough memory for stable";
+	goto error;
+    }
+
+    /* load the stable */
     if (aff_file_setpos(aff->file, aff->stable_hdr.start) != 0) {
 	aff->error = "Positioning on the string table failed";
 	goto error;
     }
-    sb_size = STRING_BUF0;
-    sb_used = 0;
-    sb = malloc(STRING_BUF0);
+    sb = malloc(byte_count);
     if (sb == 0) {
-	aff->error = "Not enough memory for the initial string buffer";
+	aff->error = "Not enough memory for the stable data";
+	goto error;
+    }
+    if (fread(sb, byte_count, 1, aff->file) != 1) {
+	aff->error = "Error reading stable";
 	goto error;
     }
     aff_md5_init(&md5);
-    for (string_size = aff->stable_hdr.size; string_size--;) {
-	uint8_t ch;
-
-	if (sb_used == sb_size) {
-	    uint8_t *b = realloc(sb, sb_size += STRING_BUFx);
-	    if (b == 0) {
-		free(sb);
-		aff->error = "Not enough memory to grow string buffer";
-		goto error;
-	    }
-	    sb = b;
-	}
-	if (fread(&ch, 1, 1, aff->file) != 1) {
-	    aff->error = "Error reading string table";
-	    free(sb);
-	    goto error;
-	}
-	aff_md5_update(&md5, &ch, 1);
-	sb[sb_used++] = ch;
-	if (ch == 0) {
-	    if (aff_stable_insert(aff->stable, (const char *)sb) == 0) {
-		free(sb);
-		aff->error = "String table construction error";
-		goto error;
-	    }
-	    sb_used = 0;
-	}
-    }
-    free(sb);
-    if (sb_used != 0) {
-	aff->error = "Illformed string table";
-	goto error;
-    }
+    aff_md5_update(&md5, sb, byte_count);
     aff_md5_final(md5_read, &md5);
     if (memcmp(md5_read, aff->stable_hdr.md5, 16) != 0) {
-	aff->error = "String table checksum mismatch";
+	aff->error = "Stable checksum mismatch";
+	goto error;
+    }
+    if (sb[byte_count - 1] != 0) {
+	aff->error = "Malformed stable";
+	goto error;
+    }
+
+    /* can not use rec_count here */
+    for (sym = sb; byte_count;) {
+	int slen = strlen((const char *)sym);
+
+	if (aff_stable_insert(aff->stable, (const char *)sym) == 0) {
+	    aff->error = "Stable construction error";
+	    goto error;
+	}
+	sym += slen + 1;
+	byte_count -= slen + 1;
+    }
+    free(sb);
+    sb = 0;
+
+    /* load the tree */
+    rec_count = (uint32_t)(aff->tree_hdr.records);
+    if (rec_count != (uint32_t)(aff->tree_hdr.records)) {
+	aff->error = "AFF tree too large";
+	goto error;
+    }
+    aff->tree = aff_tree_init(aff->stable, rec_count);
+    if (aff->tree == 0) {
+	aff->error = "Not enough memory for tree";
 	goto error;
     }
 
@@ -215,6 +378,10 @@ aff_reader(const char *file_name)
 	    goto error;
 	}
 	if (n_type != affNodeVoid) {
+	    if (tree_size < 4 + 8) {
+		aff->error = "Malformed tree data";
+		goto error;
+	    }
 	    if (fread(tnode, 4 + 8, 1, aff->file) != 1) {
 		aff->error = "Tree node data reading error";
 		goto error;
@@ -254,6 +421,15 @@ aff_reader(const char *file_name)
 
     return aff;
 error:
+    if (sb)
+	free(sb);
+    sb = 0;
+    if (aff->stable)
+	aff_stable_fini(aff->stable);
+    aff->stable = 0;
+    if (aff->tree)
+	aff_tree_fini(aff->tree);
+    aff->tree = 0;
     fclose(aff->file);
     aff->file = 0;
     return aff;

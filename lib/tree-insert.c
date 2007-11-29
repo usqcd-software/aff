@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <assert.h>
 #include "treap.h"
 #include "stable.h"
 #include "node-i.h"
@@ -26,11 +27,15 @@ aff_tree_insert(struct AffTree_s         *tt,
     if (n)
 	return 0;
 
-    if (tt->last_block->used == BLOCK_SIZE) {
-	b = malloc(sizeof (struct Block_s));
+    if (tt->last_block->used == tt->last_block->size) {
+	int size = (tt->last_block->size * 5) / 4;
+
+	assert(size > tt->last_block->size);
+	b = malloc(sizeof (struct Block_s)
+		   + size * sizeof (struct AffNode_s));
 	if (b == 0)
 	    return 0;
-	aff_tree_iblock(b, tt->size);
+	aff_tree_iblock(b, tt->size, size);
 	tt->last_block->next = b;
 	tt->last_block = b;
     }
