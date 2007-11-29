@@ -35,7 +35,7 @@ aff_stable_insert(struct AffSTable_s *st, const char *name)
     }
     b = st->last_block;
     sym = &b->symbol[b->used];
-    sym->name = malloc(strlen(name) + 1);
+    sym->name = malloc(len);
     if (sym->name == 0)
 	return 0;
     strcpy((char *)sym->name, name);

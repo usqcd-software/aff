@@ -213,6 +213,7 @@ do_ls(struct AffReader_s *r, const char *name, const char *kp)
 	if (node == 0) {
 	    fprintf(stderr, "lhpc-aff: error accesing %s:%s at %s\n",
 		    name, kp, p);
+	    free(p);
 	    return 1;
 	}
     }
