@@ -9,6 +9,7 @@
  * 2007/11/28 avp -- preliminary v 2.0.0 
  * 2007/11/29 avp -- final rc1 for v 2.0.0
  * 2007/11/29 avp -- final rc2 for v 2.0.0
+ * 2007/11/29 avp -- final rc3 for v 2.0.0
  */
 const char *
 aff_version(void)

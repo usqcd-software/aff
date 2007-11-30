@@ -72,8 +72,10 @@ const char *extract_data( struct AffReader_s *r, const char *fname,
     arg.weak = COPY_NODE_STRONG;
     arg.errstr = NULL;
     aff_node_foreach( r_node, copy_nodes_recursive, &arg );
-    if( NULL != arg.errstr )
-        return arg.errstr;
+    if( NULL != arg.errstr ) {
+	status = arg.errstr;
+	goto errclean_tfn;
+    }
     
     struct AffReader_s *r_old;
     if( ! new_file )
@@ -99,7 +101,7 @@ const char *extract_data( struct AffReader_s *r, const char *fname,
     }
     
     if( NULL != ( status = aff_writer_close( w ) ) )
-        return status;
+	goto errclean_tfn;
     if( NULL != fname )
         if( rename( tmp_fname, dst_fname ) )
         {
@@ -117,6 +119,7 @@ errclean_w:
     aff_writer_close( w );
     if( remove( tmp_fname ) )
         perror( tmp_fname );
+errclean_tfn:
     free( tmp_fname );
     return status;
 }

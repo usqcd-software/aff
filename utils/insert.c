@@ -226,15 +226,13 @@ int x_insert( int argc, char *argv[] )
         fprintf( stderr, "%s: %s\n", __func__, status );
         if( remove( tmp_fname ) )
             perror( __func__ );
-        free( tmp_fname );
-        return 1;
+	goto errclean_tfn;
     }
     if( rename( tmp_fname, out_fname ) )
     {
         perror( __func__ );
         fprintf( stderr, "%s: output is saved to %s\n", __func__, tmp_fname );
-        free( tmp_fname );
-        return 1;
+	goto errclean_tfn;
     }
     free( tmp_fname );
     return 0;
@@ -243,6 +241,7 @@ errclean_w:
     aff_writer_close( w );
     if( remove( tmp_fname ) )
         perror( __func__ );
+errclean_tfn:
     free( tmp_fname );
     return 1;
 }

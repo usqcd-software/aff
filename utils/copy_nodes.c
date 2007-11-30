@@ -76,30 +76,42 @@ const char *copy_node_data( struct AffReader_s *r, struct AffNode_s *r_node,
             char *ptr = (char *)malloc( size );
             if( NULL == ptr )
                 return "copy_node_data: not enough memory";
-            if( aff_node_get_char( r, r_node, ptr, size ) )
+            if( aff_node_get_char( r, r_node, ptr, size ) ) {
+		free(ptr);
                 return aff_reader_errstr( r );
-            if( aff_node_put_char( w, w_node, ptr, size ) )
+	    }
+            if( aff_node_put_char( w, w_node, ptr, size ) ) {
+		free(ptr);
                 return aff_writer_errstr( w );
+	    }
             free( ptr );
         } break;
     case affNodeInt: {
             uint32_t *ptr = (uint32_t *)malloc( size * sizeof(uint32_t) );
             if( NULL == ptr )
                 return "copy_node_data: not enough memory";
-            if( aff_node_get_int( r, r_node, ptr, size ) )
+            if( aff_node_get_int( r, r_node, ptr, size ) ) {
+		free(ptr);
                 return aff_reader_errstr( r );
-            if( aff_node_put_int( w, w_node, ptr, size ) )
+	    }
+            if( aff_node_put_int( w, w_node, ptr, size ) ) {
+		free(ptr);
                 return aff_writer_errstr( w );
+	    }
             free( ptr );
         } break;
     case affNodeDouble: {
             double *ptr = (double *)malloc( size * sizeof(double) );
             if( NULL == ptr )
                 return "copy_node_data: not enough memory";
-            if( aff_node_get_double( r, r_node, ptr, size ) )
+            if( aff_node_get_double( r, r_node, ptr, size ) ) {
+		free(ptr);
                 return aff_reader_errstr( r );
-            if( aff_node_put_double( w, w_node, ptr, size ) )
+	    }
+            if( aff_node_put_double( w, w_node, ptr, size ) ) {
+		free(ptr);
                 return aff_writer_errstr( w );
+	    }
             free( ptr );
         } break;
     case affNodeComplex: {
@@ -107,10 +119,14 @@ const char *copy_node_data( struct AffReader_s *r, struct AffNode_s *r_node,
                 malloc( size * sizeof(double _Complex) );
             if( NULL == ptr )
                 return "copy_node_data: not enough memory";
-            if( aff_node_get_complex( r, r_node, ptr, size ) )
+            if( aff_node_get_complex( r, r_node, ptr, size ) ) {
+		free(ptr);
                 return aff_reader_errstr( r );
-            if( aff_node_put_complex( w, w_node, ptr, size ) )
+	    }
+            if( aff_node_put_complex( w, w_node, ptr, size ) ) {
+		free(ptr);
                 return aff_writer_errstr( w );
+	    }
             free( ptr );
         } break;
     }

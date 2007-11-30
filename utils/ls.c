@@ -127,6 +127,7 @@ do_node(struct AffNode_s *node, void *ptr)
 	    }
 	    if (aff_node_get_char(arg->r, node, ptr, size)) {
 		fprintf(stderr, "lhpc-aff: error getting data\n");
+		free(ptr);
 		exit(1);
 	    }
 	    printf("    \"");
@@ -149,6 +150,7 @@ do_node(struct AffNode_s *node, void *ptr)
 	    }
 	    if (aff_node_get_int(arg->r, node, ptr, size)) {
 		fprintf(stderr, "lhpc-aff: error getting data\n");
+		free(ptr);
 		exit(1);
 	    }
 	    for (i = 0; i < size; i++)
@@ -165,6 +167,7 @@ do_node(struct AffNode_s *node, void *ptr)
 	    }
 	    if (aff_node_get_double(arg->r, node, ptr, size)) {
 		fprintf(stderr, "lhpc-aff: error getting data\n");
+		free(ptr);
 		exit(1);
 	    }
 	    for (i = 0; i < size; i++)
@@ -181,6 +184,7 @@ do_node(struct AffNode_s *node, void *ptr)
 	    }
 	    if (aff_node_get_complex(arg->r, node, ptr, size)) {
 		fprintf(stderr, "lhpc-aff: error getting data\n");
+		free(ptr);
 		exit(1);
 	    }
 	    for (i = 0; i < size; i++)

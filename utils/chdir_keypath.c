@@ -43,13 +43,18 @@ struct AffNode_s *chdir_path(struct AffReader_s *r,
         NULL == key_path )
         return NULL;
     char *kpath = malloc( strlen( key_path ) + 1 );
-    strcpy( kpath, key_path );
     char *s, *end = kpath;
-    
+
+    if (kpath == NULL)
+	return NULL;
+
+    strcpy( kpath, key_path );
     if( '/' == *end )
         r_node = aff_reader_root( r );
-    if( NULL == r_node )
+    if( NULL == r_node ) {
+	free(kpath);
         return NULL;
+    }
     
     while( NULL != ( s = my_strsep( end, &end, '/' ) ) &&
            r_node != NULL )
@@ -69,9 +74,13 @@ struct AffNode_s *mkdir_path( struct AffWriter_s *w,
         NULL == key_path )
         return NULL;
     char *kpath = malloc( strlen( key_path ) + 1 );
-    strcpy( kpath, key_path );
     char *s, *end = kpath;
-    
+
+    if (kpath == 0)
+	return NULL;
+
+    strcpy( kpath, key_path );
+
     if( '/' == *end )                           
         w_node = aff_writer_root( w );
     while( NULL != ( s = my_strsep( end, &end, '/' ) ) &&

@@ -95,9 +95,14 @@ void cat_single_node( struct AffNode_s *r_node, void *arg_ )
     case affNodeChar: 
         {
             char *buf = (char *)malloc( size );
+	    if (buf == 0) {
+		arg->errstr = "Not enough memory";
+		return;
+	    }
             if( aff_node_get_char( r, r_node, buf, size ) )
             {
                 arg->errstr = aff_reader_errstr( r );
+		free(buf);
                 return;
             }
 	    for ( size_t i = 0; i < size; i++) {
@@ -113,9 +118,14 @@ void cat_single_node( struct AffNode_s *r_node, void *arg_ )
     case affNodeInt:
         {
             uint32_t *buf = (uint32_t *)malloc( size *sizeof(uint32_t) );
+	    if (buf == 0) {
+		arg->errstr = "Not enough memory";
+		return;
+	    }
             if( aff_node_get_int( r, r_node, buf, size ) )
             {
                 arg->errstr = aff_reader_errstr( r );
+		free(buf);
                 return;
             }
             for( size_t i = 0 ; i < size ; ++i )
@@ -129,9 +139,14 @@ void cat_single_node( struct AffNode_s *r_node, void *arg_ )
     case affNodeDouble: 
         {
             double *buf = (double *)malloc( size *sizeof(double) );
+	    if (buf == 0) {
+		arg->errstr = "Not enough memory";
+		return;
+	    }
             if( aff_node_get_double( r, r_node, buf, size ) )
             {
                 arg->errstr = aff_reader_errstr( r );
+		free(buf);
                 return;
             }
             for( size_t i = 0 ; i < size ; ++i )
@@ -146,9 +161,14 @@ void cat_single_node( struct AffNode_s *r_node, void *arg_ )
         {
             double _Complex *buf = (double _Complex *)
                 malloc( size *sizeof(double _Complex) );
+	    if (buf == 0) {
+		arg->errstr = "Not enough memory";
+		return;
+	    }
             if( aff_node_get_complex( r, r_node, buf, size ) )
             {
                 arg->errstr = aff_reader_errstr( r );
+		free(buf);
                 return;
             }
             for( size_t i = 0 ; i < size ; ++i )
