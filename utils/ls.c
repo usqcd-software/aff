@@ -203,7 +203,8 @@ do_node(struct AffNode_s *node, void *ptr)
 static int
 do_ls(struct AffReader_s *r, const char *name, const char *kp)
 {
-    char *p = xstrdup(kp);
+    char *pp = xstrdup(kp);
+    char *p = pp;
     struct AffNode_s *root = aff_reader_root(r);
     struct AffNode_s *node;
     struct arg arg;
@@ -213,11 +214,11 @@ do_ls(struct AffReader_s *r, const char *name, const char *kp)
 	if (node == 0) {
 	    fprintf(stderr, "lhpc-aff: error accesing %s:%s at %s\n",
 		    name, kp, p);
-	    free(p);
+	    free(pp);
 	    return 1;
 	}
     }
-    free(p);
+    free(pp);
     arg.r = r;
     arg.fname = name;
     arg.kpath = kp;
