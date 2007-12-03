@@ -28,7 +28,8 @@ static int
     print_index = 0,
     print_all_subnodes = 0,
     print_recursive = 0,
-    print_end_mark = 0;
+    print_end_mark = 0,
+    ignore_missing = 0;
 
 struct cat_node_arg
 {
@@ -199,28 +200,21 @@ void cat_nodes_recursive( struct AffNode_s *r_node, void *arg_ )
 int cat_keypath( struct AffReader_s *r, const char *keypath, 
         struct cat_node_arg *arg )
 {
-    struct AffNode_s *r_root = aff_reader_root( r );
-    if( NULL == r_root )
-    {
-        fprintf( stderr, "%s: %s\n", __func__, aff_reader_errstr( r ) );
-        return 1;
-    }
-    struct AffNode_s *r_node = chdir_path( r, r_root, keypath );
-    if( NULL == r_node )
-    {
-        fprintf( stderr, "%s: %s\n", __func__, aff_reader_errstr( r ) );
-        return 1;
+    struct AffNode_s *r_node = lookup_path(r, aff_reader_root(r), keypath);
+    if (NULL == r_node) {
+        fprintf(stderr, "%s: [%s]: cannot read node\n", __func__, keypath);
+        return !ignore_missing;
     }
     
-    if( print_recursive )
-        cat_nodes_recursive( r_node, arg );
-    else if( print_all_subnodes )
-        aff_node_foreach( r_node, cat_single_node, arg );
+    if (print_recursive)
+        cat_nodes_recursive(r_node, arg);
+    else if (print_all_subnodes)
+        aff_node_foreach(r_node, cat_single_node, arg);
     else
-        cat_single_node( r_node, arg );
+        cat_single_node(r_node, arg);
     if( NULL != arg->errstr )
     {
-        fprintf( stderr, "%s: %s", __func__, arg->errstr );
+        fprintf(stderr, "%s: [%s]: %s\n", __func__, keypath, arg->errstr);
         return 1;
     }
     return 0;
@@ -230,56 +224,48 @@ int cat_keylist( struct AffReader_s *r, const char *list_fname,
         struct cat_node_arg *arg )
 {
     FILE *list = NULL;
-    if( 0 == strcmp( list_fname, "-" ) )
-    {
-            list = stdin;
-        if( ferror( list ) )
-        {
-            fprintf( stderr, "%s: bad stdin stream\n", __func__ );
+    if(0 == strcmp(list_fname, "-")) {
+        list = stdin;
+        if (ferror(list)) {
+            fprintf(stderr, "%s: bad stdin stream\n", __func__);
             return 1;
         }
     }
-    else
-    {
-        if( NULL == ( list = fopen( list_fname, "r" ) ) )
-        {
-            fprintf( stderr, "%s: cannot open %s\n", __func__, list_fname );
+    else {
+        if (NULL == (list = fopen(list_fname, "r"))) {
+            fprintf(stderr, "%s: cannot open %s\n", __func__, list_fname);
             return 1;
         }
     }
     char buf[16384], *fargv[1];
     int num;
-    while( NULL != fgets( buf, sizeof(buf), list ) )
-    {
-        if( '\n' != buf[strlen(buf)-1] )
-        {
-            fprintf( stderr, "%s: line too long, skipping\n", __func__ );
-            while( NULL != fgets( buf, sizeof(buf), list ) )
-                if( '\n' == buf[strlen(buf)-1] )
+    while (NULL != fgets(buf, sizeof(buf), list)) {
+        if ('\n' != buf[strlen(buf)-1]) {
+            fprintf(stderr, "%s: line too long, skipping\n", __func__);
+            while (NULL != fgets(buf, sizeof(buf), list))
+                if ('\n' == buf[strlen(buf)-1])
                     break;
             continue;
         }
         num = split_farg( buf, 1, fargv );
-        if( num < 0 )
-        {
-            fprintf( stderr, "%s: unexpected result of split_farg; exiting\n",
-                    __func__ );
+        if (num < 0) {
+            fprintf(stderr, "%s: unexpected result of split_farg; exiting\n",
+                    __func__);
             goto errclean_r;
         }
-        if( num == 0 )
+        if (num == 0)
             continue;
-        if( cat_keypath( r, fargv[0], arg ) )
-        {
-            fprintf( stderr, "%s: [%s]\n", __func__, fargv[0] );
+        if (cat_keypath(r, fargv[0], arg)) {
+            fprintf(stderr, "%s: [%s]\n", __func__, fargv[0]);
             goto errclean_r;
         }
     }
     
-    fclose( list );
+    fclose(list);
     return 0;
     
 errclean_r:
-    fclose( list );
+    fclose(list);
     return 1;
 }
 
@@ -310,6 +296,7 @@ int x_cat( int argc, char *argv[] )
             case 'n':   print_index = 1;            break;
             case 'a':   print_all_subnodes = 1;     break;
             case 'R':   print_recursive = 1;        break;
+            case 'i':   ignore_missing = 1;         break;
             case 'f':   
                 {
                     if( '\0' != *(p+1) || !(--argc) )
@@ -402,15 +389,16 @@ errclean_r:
 void h_cat(void)
 {
     printf( "Usage:\n"
-            "lhpc-aff cat [-acgnmR] [-f <pre-list>] [-F <post-list>] <aff-file>\n"
+            "lhpc-aff cat [-acgimnR] [-f <pre-list>] [-F <post-list>] <aff-file>\n"
             "\t\t[<keypath>] ...\n"
             "Print the data associated with keypath in the file aff-file.\n"
-            "If no keypath given, start from the root node\n"
+            "If no <keypath> or -f,-F options given, list the root node.\n"
             "\t-a\tprint data of all immediate subkeys instead of\n"
             "\t\tgiven keypath itself\n"
             "\t-c\tprint a comment line starting with #\n" 
             "\t-g\tput gnuplot-style double new-line separators between data\n"
             "\t\tof different keys\n"
+            "\t-i\tignore error if <keypath> does not exist\n"
             "\t-m\tprint line '#AFF:END' after each record (useful for batch processing)\n"
             "\t-n\tput the array index in a first column\n"
             "\t-R\tprint the keypath all its subkeys recursively; \n"

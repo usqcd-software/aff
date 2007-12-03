@@ -11,6 +11,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <lhpc-aff.h>
+#include <aff-i.h>
+
 #include "common.h"
 
 static
@@ -62,6 +64,38 @@ struct AffNode_s *chdir_path(struct AffReader_s *r,
         if( '\0' == *s )                
             continue;
         r_node = aff_reader_chdir( r, r_node, s );
+    }
+    free( kpath );
+    return r_node;
+}
+struct AffNode_s *lookup_path(struct AffReader_s *r, 
+        struct AffNode_s *r_node, const char *key_path )
+{
+    if( NULL == r ||
+        NULL == key_path )
+        return NULL;
+    char *kpath = malloc( strlen( key_path ) + 1 );
+    char *s, *end = kpath;
+
+    if (kpath == NULL)
+	return NULL;
+
+    strcpy( kpath, key_path );
+    if( '/' == *end )
+        r_node = aff_reader_root( r );
+    if( NULL == r_node ) {
+	free(kpath);
+        return NULL;
+    }
+    
+    while( NULL != ( s = my_strsep( end, &end, '/' ) ) &&
+           r_node != NULL )
+    {
+        if( '\0' == *s )
+            continue;
+        /* FIXME replace with a lookup interface function, 
+           if (as early as there is) any */
+        r_node = aff_node_chdir(r->tree, r->stable, r_node, 0, s);
     }
     free( kpath );
     return r_node;

@@ -14,6 +14,8 @@
 /* implemented in chdir_keypath.c */
 struct AffNode_s *chdir_path(struct AffReader_s *r,
                struct AffNode_s *r_node, const char *key_path );
+struct AffNode_s *lookup_path(struct AffReader_s *r,
+               struct AffNode_s *r_node, const char *key_path );
 struct AffNode_s *mkdir_path( struct AffWriter_s *w,
                 struct AffNode_s *w_node, const char *key_path );
 

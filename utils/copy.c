@@ -11,19 +11,24 @@
 #include <stdlib.h>
 #include <lhpc-aff.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "util.h"
 #include "common.h"
+
+static int ignore_missing = 0;
 
 static int do_copy( struct AffReader_s *r, struct AffWriter_s *w,
         const char *src_kpath, const char *dst_kpath, int copy_recursive )
 {
     const char *status;
-    struct AffNode_s *r_node = chdir_path( r, aff_reader_root( r ), src_kpath );
-    if( NULL == r_node )
-    {
-        fprintf( stderr, "%s: cannot read key [%s]: %s\n",
-                __func__, src_kpath, aff_reader_errstr( r ) );
-        return 1;
+    struct AffNode_s *r_root = aff_reader_root(r);
+    struct AffNode_s *r_node = lookup_path(r, r_root, src_kpath);
+    if (NULL == r_node) {
+        fprintf(stderr, "%s: [%s]: cannot read node\n", __func__, src_kpath);
+        return !ignore_missing;
     }
     if( aff_reader_root( r ) == r_node )
     {
@@ -144,6 +149,7 @@ int x_copy( int argc, char **argv )
         {
             switch( *p )
             {
+            case 'i': ignore_missing = 1;       break;
             case 'R': copy_recursive = 1;       break;
             case 'f':
                 {
@@ -189,7 +195,12 @@ int x_copy( int argc, char **argv )
         return 1;
     }
 
-    struct AffReader_s *r = aff_reader( src_fname );
+    struct AffReader_s *r;
+    if (NULL == (r = aff_reader( src_fname )))
+    {
+        fprintf(stderr, "%s: not enough memory\n", __func__);
+        return 1;
+    }
     if( NULL != aff_reader_errstr( r ) )
     {
         fprintf( stderr, "%s: %s: %s\n", __func__, src_fname, aff_reader_errstr( r ) );
@@ -201,7 +212,12 @@ int x_copy( int argc, char **argv )
         fprintf( stderr, "%s: could not create a unique writable file\n", __func__ );
         goto errclean_r;
     }
-    struct AffWriter_s *w = aff_writer( tmp_fname );
+    struct AffWriter_s *w;
+    if (NULL == (w = aff_writer( tmp_fname )))
+    {
+        fprintf(stderr, "%s: not enough memory\n", __func__);
+        goto errclean_r_free;
+    }
     if( NULL != aff_writer_errstr( w ) )
     {
         fprintf( stderr, "%s: %s: %s\n", __func__, tmp_fname, aff_writer_errstr( w ) );
@@ -223,48 +239,61 @@ int x_copy( int argc, char **argv )
         if( copy_keylist( r, w, list2_fname, copy_recursive ) )
             goto errclean_rw;
     }
-    
     aff_reader_close( r );
-    r = aff_reader( dst_fname );
-    if( NULL != aff_reader_errstr( r ) )
-    {
-        fprintf( stderr, "%s: %s\n", __func__, aff_reader_errstr( r ) );
-        goto errclean_rw;
-    }
-    struct copy_nodes_arg arg;
-    arg.r = r;
-    arg.w = w;
-    arg.w_parent = aff_writer_root( w );
-    arg.weak = COPY_NODE_WEAK;
-    arg.errstr = NULL;
-    aff_node_foreach( aff_reader_root( r ), copy_nodes_recursive, (void *)&arg );
-    if( NULL != arg.errstr )
-    {
-        fprintf( stderr, "%s: %s\n", __func__, arg.errstr );
-        goto errclean_rw;
+    struct stat stat_fb;
+    if (!stat(dst_fname, &stat_fb)) {
+        if(NULL == (r = aff_reader( dst_fname )))
+        {
+            fprintf(stderr, "%s: not enough memory\n", __func__);
+            goto errclean_w;
+        }
+        if( NULL != aff_reader_errstr( r ) )
+        {
+            fprintf( stderr, "%s: %s\n", __func__, aff_reader_errstr( r ) );
+            goto errclean_rw;
+        }
+        struct copy_nodes_arg arg;
+        arg.r = r;
+        arg.w = w;
+        arg.w_parent = aff_writer_root( w );
+        arg.weak = COPY_NODE_WEAK;
+        arg.errstr = NULL;
+        aff_node_foreach( aff_reader_root( r ), copy_nodes_recursive, (void *)&arg );
+        if( NULL != arg.errstr )
+        {
+            fprintf( stderr, "%s: %s\n", __func__, arg.errstr );
+            goto errclean_rw;
+        }
+        aff_reader_close( r );
     }
 
     if( NULL != ( status = aff_writer_close( w ) ) )
     {
         fprintf( stderr, "%s: %s: %s\n", __func__, tmp_fname, status );
-        goto errclean_r;
+        goto errclean_file;
     }
     if( rename( tmp_fname, dst_fname ) )
-    {    
+    {
         perror( dst_fname );
-        if( remove( tmp_fname ) )
-            perror( tmp_fname );
-        goto errclean_r;
+        fprintf( stderr, "%s: output is saved to %s\n", __func__, tmp_fname );
+        goto errclean_free;
     }
     free( tmp_fname );
-    aff_reader_close( r );
     return 0;
 
 errclean_rw:
+    aff_reader_close( r );
+errclean_w:
     aff_writer_close( w );
+errclean_file:
     if( remove( tmp_fname ) )
         perror( tmp_fname );
+errclean_free:
     free( tmp_fname );
+    return 1;
+    
+errclean_r_free:
+    free(tmp_fname);
 errclean_r:
     aff_reader_close( r );
     return 1;
@@ -273,14 +302,16 @@ errclean_r:
 void h_copy(void)
 {
     printf( "Usage:\n"
-            "lhpc-aff cp [-f <list>] [-F <list>] <src-file> <dst-file>\n"
+            "lhpc-aff cp [-iR] [-f <list>] [-F <list>] <src-file> <dst-file>\n"
             "\t\t[<src-kpath> <dst-kpath>] ...\n" 
             "Copy data from <src-kpath> of <src-file> to <dst-kpath> of <dst-file>:\n"
             "<dst-file>[<dst-kpath>]  <--  <src-file>[<src-kpath>].\n"
             "Keys <src-kpath> and <dst-kpath> cannot be root nodes, use 'extract' instead.\n"
-            "New data replaces old data. Both files must exist. They may be the same file,\n"
-            "which is rewritten in the end of all copying.\n"
+            "New data replaces old data. If <dst-file> does not exist, it will be created.\n"
+            "If <src-file> and <dst-file> are the same, nodes to copy will be put first,\n"
+            "and then the rest of file will be reinserted.\n"
             "Options:\n"
+            "\t-i\tignore error if <src-keypath> do not exist\n"
             "\t-R\tcopy data sub-entries recursively.\n"
             "\t-f <pre-list>\n\t\texecute copy instructions in file <pre-list> BEFORE\n"
             "\t\tprocessing command line list\n"

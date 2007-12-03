@@ -1,6 +1,7 @@
 #ifndef MARK_6f9650e1_45e8_4695_81a9_8c3672baee90
 #define MARK_6f9650e1_45e8_4695_81a9_8c3672baee90
 #include "aff.h"
+#include <stdio.h>
 
 enum {
     AFF_SIG_ID_SIZE   =  21, /* These shalt be so for the ages of ages */

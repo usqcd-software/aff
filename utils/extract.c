@@ -19,52 +19,52 @@
 #include "util.h"
 #include "common.h"
 
+static int start_empty = 0;
+static int ignore_missing = 0;
+
 // if fname is NULL, start with empty file
 // XXX root node data is not copied!
-const char *extract_data( struct AffReader_s *r, const char *fname,
-        const char *dst_fname, const char *dst_kpath, const char *src_kpath )
+int extract_data( struct AffReader_s *r, const char *dst_fname, 
+        const char *dst_kpath, const char *src_kpath )
 {
-    if( NULL == dst_fname )
-        return "extract_data: invalid output file name";
+    if (NULL == dst_fname) {
+        fprintf(stderr, "%s: invalid output file name\n", __func__);
+        return 0;
+    }
     const char *status = NULL;
-    struct AffNode_s *r_node = chdir_path( r, aff_reader_root( r ), src_kpath );
-    if( NULL == r_node )
-        return aff_reader_errstr( r );
-    struct stat stat_buf;
-    int new_file = 1;
-    if( NULL != fname && !( stat( fname, &stat_buf ) ) )
-        new_file = 0;
-    char *tmp_fname = NULL;
+    struct AffNode_s *r_root = aff_reader_root(r);
+    if (NULL == r_root) {
+        fprintf(stderr, "%s: %s\n", __func__, aff_reader_errstr(r));
+        return 1;
+    }
+    struct AffNode_s *r_node = lookup_path(r, r_root, src_kpath);
+    if (NULL == r_node) {
+        fprintf(stderr, "%s: [%s]: cannot read node\n", __func__, src_kpath);
+        return !ignore_missing;
+    }
+    char *tmp_fname;
+    if (NULL == (tmp_fname = mk_tmp_filename(".tmp-aff.", dst_fname))) {
+        fprintf(stderr, "%s: cannot generate unique writable filename\n",
+                __func__);
+        return 1;
+    }
     
-    if( ! new_file )
-    {
-        // create tmpfile just for the case 'fname' and 'out_fname' are the same file
-        if( NULL == ( tmp_fname = mk_tmp_filename( ".tmp-aff.", dst_fname ) ) )
-            return "extract_data: cannot generate unique writable filename";
+    struct AffWriter_s *w; 
+    if (NULL == (w = aff_writer(tmp_fname))) {
+        fprintf(stderr, "%s: not enough memory\n", __func__);
+        goto errclean_free;
     }
-    else
-    {
-        // start with empty file 'out_fname'
-        if( NULL == ( tmp_fname = (char *)malloc( strlen( dst_fname ) + 1 ) ) )
-            return "extract_data: not enough memory";
-        strcpy( tmp_fname, dst_fname );
-    }
-    struct AffWriter_s *w = aff_writer( tmp_fname );
-    if( NULL != ( status = aff_writer_errstr( w ) ) )
-        goto errclean_w;
-    struct AffNode_s *w_root = aff_writer_root( w );
-    if( NULL == w_root )
-    {
-        status = aff_writer_errstr( w );
+    if (NULL != (status = aff_writer_errstr( w ) ) ) {
+        fprintf(stderr, "%s: %s: %s\n", __func__, tmp_fname, status);
         goto errclean_w;
     }
-    struct AffNode_s *w_node = mkdir_path( w, w_root, dst_kpath );
-    if( NULL == w_node )
-    {
-        status = aff_writer_errstr( w );
+    struct AffNode_s *w_node;
+    if (NULL == (w_node = mkdir_path(w, aff_writer_root(w), dst_kpath))) {
+        fprintf(stderr, "%s: %s[%s]: %s\n", __func__, tmp_fname,
+                dst_kpath, aff_writer_errstr(w));
         goto errclean_w;
     }
-        
+
     struct copy_nodes_arg arg;
     arg.r   = r;
     arg.w   = w;
@@ -72,65 +72,73 @@ const char *extract_data( struct AffReader_s *r, const char *fname,
     arg.weak = COPY_NODE_STRONG;
     arg.errstr = NULL;
     aff_node_foreach( r_node, copy_nodes_recursive, &arg );
-    if( NULL != arg.errstr ) {
-	status = arg.errstr;
-	goto errclean_tfn;
+    if (NULL != arg.errstr) {
+        fprintf(stderr, "%s: [%s] -> %s[%s]: %s\n", __func__, src_kpath,
+                tmp_fname, dst_kpath, arg.errstr);
+	goto errclean_w;
     }
     
+    struct stat stat_fb;
     struct AffReader_s *r_old;
-    if( ! new_file )
+    if (!start_empty && !stat(dst_fname, &stat_fb))
     {
-        r_old = aff_reader( fname );
-        if( NULL != ( status = aff_reader_errstr( r_old ) ) )
-            goto errclean_rw;
-        struct AffNode_s *r_old_root = aff_reader_root( r_old );
-        if( NULL == r_old_root )
+        if (NULL == (r_old = aff_reader(dst_fname))) {
+            fprintf(stderr, "%s: not enough memory\n", __func__ );
+            goto errclean_w;
+        }
+        if (NULL != (status = aff_reader_errstr(r_old)))
         {
-            status = aff_reader_errstr( r_old );
+            fprintf(stderr, "%s: %s: %s\n", __func__, dst_fname, status);
+            goto errclean_rw;
+        }
+        struct AffNode_s *r_old_root = aff_reader_root(r_old);
+        if (NULL == r_old_root) {
+            fprintf(stderr, "%s: %s: %s\n", __func__, dst_fname, 
+                    aff_reader_errstr(r_old));
             goto errclean_rw;
         }
         arg.r = r_old;
         arg.w = w;
-        arg.w_parent = w_root;
+        arg.w_parent = aff_writer_root(w);
         arg.weak = COPY_NODE_WEAK;
         arg.errstr = NULL;
         aff_node_foreach( r_old_root, copy_nodes_recursive, &arg );
-        if( NULL != ( status = arg.errstr ) ) 
+        if (NULL != arg.errstr) {
+            fprintf(stderr, "%s: %s -> %s: %s\n", __func__, dst_fname, 
+                    tmp_fname, arg.errstr);
             goto errclean_rw;
+        }
         aff_reader_close( r_old );
     }
     
-    if( NULL != ( status = aff_writer_close( w ) ) )
-	goto errclean_tfn;
-    if( NULL != fname )
-        if( rename( tmp_fname, dst_fname ) )
-        {
-            status = strerror( errno );
-            fprintf( stderr, "%s: output saved to %s", __func__, tmp_fname );
-            free( tmp_fname );
-            return status;
-        }
+    if(NULL != (status = aff_writer_close(w))) {
+        fprintf(stderr, "%s: %s: %s\n", __func__, tmp_fname, status);
+	goto errclean_file;
+    }
+    if(rename(tmp_fname, dst_fname)) {
+        perror(dst_fname);
+        fprintf(stderr, "%s: output saved to %s", __func__, tmp_fname);
+        goto errclean_free;
+    }
     free( tmp_fname );
-    return NULL;
+    return 0;
     
 errclean_rw:
     aff_reader_close( r_old );
 errclean_w:
     aff_writer_close( w );
+errclean_file:
     if( remove( tmp_fname ) )
         perror( tmp_fname );
-errclean_tfn:
+errclean_free:
     free( tmp_fname );
-    return status;
+    return 1;
 }
     
-int start_empty = 0;
-
 int extract_keylist( struct AffReader_s *r, const char *list_fname )
 {
     char buf[49152];
     char *fargv[3];
-    const char * status;
     FILE *list;
     int num;
     if( 0 == strcmp( list_fname, "-" ) )
@@ -175,16 +183,8 @@ int extract_keylist( struct AffReader_s *r, const char *list_fname )
                      __func__, num );
             goto errclean_r;
         }
-        if( start_empty )
-            status = extract_data( r, NULL, fargv[1], fargv[2], fargv[0] );
-        else
-            status = extract_data( r, fargv[1], fargv[1], fargv[2], fargv[0] );
-        if( NULL != status )
-        {
-            fprintf( stderr, "%s: %s[%s] <- [%s]: %s\n", 
-                    __func__, fargv[1], fargv[2], fargv[0], status );
+        if( extract_data( r, fargv[1], fargv[2], fargv[0] ) )
             goto errclean_r;
-        }
     }
     fclose( list );
     return 0;    
@@ -197,7 +197,6 @@ errclean_r:
 int x_extract( int argc, char *argv[] )
 {
     const char *fname = NULL,
-               *status = NULL,
                *list1_fname = NULL,
                *list2_fname = NULL;
     for( ; argc ; --argc, ++argv )
@@ -209,6 +208,7 @@ int x_extract( int argc, char *argv[] )
             switch( *p )
             {
             case 'e': start_empty = 1;          break;
+            case 'i': ignore_missing = 1;       break;
             case 'f':
                 {
                     if( '\0' != *(p+1) || !(--argc) )
@@ -256,29 +256,23 @@ int x_extract( int argc, char *argv[] )
                 __func__ );
         return 1;
     }
-    struct AffReader_s *r = aff_reader( fname );
-    if( NULL != aff_reader_errstr( r ) )
-    {
+    struct AffReader_s *r; 
+    if (NULL == (r = aff_reader(fname))) {
+        fprintf(stderr, "%s: not enough memory\n", __func__);
+        return 1;
+    }
+    if (NULL != aff_reader_errstr(r)) {
         fprintf( stderr, "%s: %s: %s\n", __func__, fname, aff_reader_errstr( r ) );
         goto errclean_r;
     }
-    if( NULL != list1_fname )
-    {
-        if( extract_keylist( r, list1_fname ) )
+    if (NULL != list1_fname) {
+        if(extract_keylist(r, list1_fname))
             goto errclean_r;
     }
     for( ; argc ; argc-=3, argv+=3 )
     {
-        if( start_empty )
-            status = extract_data( r, NULL, argv[1], argv[2], argv[0] );
-        else
-            status = extract_data( r, argv[1], argv[1], argv[2], argv[0] );
-        if( NULL != status )
-        {
-            fprintf( stderr, "%s: %s[%s] <- [%s]: %s\n", 
-                    __func__, argv[1], argv[2], argv[0], status );
+        if( extract_data( r, argv[1], argv[2], argv[0] ) )
             goto errclean_r;
-        }
     }
     if( NULL != list2_fname )
     {
@@ -298,7 +292,7 @@ errclean_r:
 void h_extract(void)
 {
     printf( "Usage:\n"
-            "lhpc-aff extract [-e] [-f <pre-list>] [-F <post-list>] <aff-file>\n"
+            "lhpc-aff extract [-ei] [-f <pre-list>] [-F <post-list>] <aff-file>\n"
             "\t\t[<src-kpath> <dst-file> <dst-kpath>] ...\n"
             "Extract recursively all the data entries from <src-kpath> of <aff-file>\n"
             "and put it into <dst-file> at <dst-kpath>:\n"
@@ -306,8 +300,8 @@ void h_extract(void)
             "Note that the data from <src-kpath> itself is not copied. New data\n"
             "replaces old data. If an output file does not exist, it will be created\n"
             "Options:\n"
-            "\t-e\tstart each export with an empty output file\n"
-            "\t\t(all preexisting data is discarded)\n"
+            "\t-e\textract to an empty file (discard previous data)"
+            "\t-i\tignore error if <src-kpath> do not exist\n"
             "\t-f <pre-list>\n\t\tprint data from key list in file <pre-list> BEFORE\n"
             "\t\tprocessing command line list\n"
             "\t-F <post-list>\n\t\tprint data from key list in file <post-list> AFTER\n"
