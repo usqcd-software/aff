@@ -7,6 +7,7 @@ prefix=/usr/local
 prefix_lib=$(prefix)/lib
 prefix_include=$(prefix)/include
 prefix_bin=$(prefix)/bin
+prefix_math=$(prefix)/math
 prefix_doc=$(prefix)/doc
 .PHONY: all clean realclean install do.install
 
@@ -68,6 +69,8 @@ do.install: lhpc-aff-config docs/aff_spec.pdf COPYRIGHT
 	   cp $$f $(prefix_doc)/$$bf; \
 	   chmod 444 $(prefix_doc)/$$bf; \
 	done
+	mkdir -p $(prefix_math)
+	cp math/aff.m $(prefix_math)/aff.m
 
 lhpc-aff-config: Makefile config/$(CONFIG) aff-config.in
 	sed -e 's?@CC@?$(install.CC)?' \

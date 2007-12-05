@@ -185,13 +185,6 @@ aff_reader(const char *file_name)
     uint32_t byte_count;
     uint64_t tree_size;
     uint32_t sig_size;
-#if 0    
-    uint32_t data;
-    int size;
-    int sb_size;
-    int sb_used;
-    uint64_t string_size;
-#endif    
 
     if (aff == 0)
 	return 0;
@@ -227,58 +220,6 @@ aff_reader(const char *file_name)
 	aff->error = "Bad AFF header";
 	goto error;
     }
-#if 0
-    if (fread(buf, sizeof (buf), 1, aff->file) != 1) {
-	aff->error = "Reading AFF header failed";
-	goto error;
-    }
-    aff_md5_init(&md5);
-    aff_md5_update(&md5, buf, sizeof (buf) - 16);
-    aff_md5_final(md5_read, &md5);
-    if (memcmp(md5_read, buf + sizeof (buf) - 16, 16) != 0) {
-	aff->error = "AFF header failed checksum";
-	goto error;
-    }
-
-    /* NB: This should match writer_fini() */
-    buf[sizeof(buf) - 1] = 0; /* Paranoia? I don't think so */
-    if (strcmp((const char *)buf, (const char *)aff_signature) != 0) {
-	aff->error = "AFF signature mismatch";
-	goto error;
-    }
-    size = strlen((const char *)aff_signature) + 1;
-    if (buf[size] != sizeof (double) * CHAR_BIT) {
-	aff->error = "AFF size if double mismatch";
-	goto error;
-    }
-    if (buf[size+1] != FLT_RADIX || FLT_RADIX != 2) {
-	aff->error = "AFF double radix mismatch";
-	goto error;
-    }
-    if (buf[size+2] != DBL_MANT_DIG) {
-	aff->error = "AFF double mantissa size mismatch";
-	goto error;
-    }
-    if (aff_decode_u32(&data, buf + size + 3, 4) == 0) {
-	aff->error = "AFF error decoding double exponent sizes";
-	goto error;
-    }
-    if ((data >> 16 != DBL_MAX_EXP) || ((data & 0xffff) != (- DBL_MIN_EXP))) {
-	aff->error = "AFF exponent limits mismatch";
-	goto error;
-    }
-    if (aff_decode_u32(&data, buf + size + 7, 4) == 0 ||
-	data != AFF_HEADER_SIZE) {
-	aff->error = "AFF header size check failed";
-	goto error;
-    }
-    unpack(aff, &aff->data_hdr,   buf, size+11, "data header unpack failed");
-    unpack(aff, &aff->stable_hdr, buf, size+43, "stable header unpack failed");
-    unpack(aff, &aff->tree_hdr,   buf, size+75, "tree header unpack failed");
-
-    if (aff->error)
-	goto error;
-#endif
 
     /* load the stable */
     rec_count = aff->stable_hdr.records; /* = 0 in V1 */

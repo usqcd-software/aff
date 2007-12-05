@@ -11,7 +11,7 @@ affOpen[fileName_String] :=
 	  tbOff, tbSize, tbCount,
 	  affSym, nodeTypes, affRoot, affNodes, affName, affOffset, affSize,
 	  affType, affChildren,
-	  affXGet, affXClose,
+	  affXGet, affXClose, affXFormat,
           name, type, offset, size, children},
     affOpened = False;
     aff = OpenRead[fileName, BinaryFormat -> True];
@@ -80,36 +80,36 @@ affOpen[fileName_String] :=
 
     root = Map[Function[c,affName[[c]]->affNodes[[c]]], affRoot];
 
-    affXGet[aO_, path_String] :=
-    Module[{t,o,s,d,fmt,lookup},
-	   If [affOpened == False, Return[$Failed]];
-	   lookup = Module[{ks, d, ch},
-			   ks = StringSplit[path, "/"];
-			   If [ks == {}, Return[$Failed]];
-			   d = First[ks] /. root;
-			   If [d == First[ks], Return[$Failed]];
-			   For [ks = Rest[ks],
-				   ks != {},
-				   ch = children /. d;
-				   If [ch == children, Return[$Failed]];
-				   d = First[ks] /. ch;
-				   ks = Rest[ks]];
-			   If [ListQ[d], {type/.d, offset/.d, size/.d},
-				    Return[$Failed]]];
-	   If [lookup == $Failed, Return [$Failed]];
-	   {t, o, s} = lookup;
-	   fmt = Switch[t,
-			"void", Return[{t,0,{}}],
-			"char", "Character8",
-			"int",  "Integer32",
-			"double", "Real64",
-			"complex", "Complex128",
-			_, Return[$Failed]];
-	   SetStreamPosition[aff, o];
-	   d = BinaryReadList[aff, fmt, s, ByteOrdering -> 1];
-	   {t, d}];
+    affXGet[path_String] :=
+      Module[{t,o,s,d,fmt,lookup},
+	     If [affOpened == False, Return[$Failed]];
+	     lookup = Module[{ks, d, ch},
+			     ks = StringSplit[path, "/"];
+			     If [ks == {}, Return[$Failed]];
+			     d = First[ks] /. root;
+			     If [d == First[ks], Return[$Failed]];
+			     For [ks = Rest[ks],
+				     ks != {},
+				     ch = children /. d;
+				     If [ch == children, Return[$Failed]];
+				     d = First[ks] /. ch;
+				     ks = Rest[ks]];
+			     If [ListQ[d], {type/.d, offset/.d, size/.d},
+				      Return[$Failed]]];
+	     If [lookup == $Failed, Return [$Failed]];
+	     {t, o, s} = lookup;
+	     fmt = Switch[t,
+			  "void", Return[{t,0,{}}],
+			  "char", "Character8",
+			  "int",  "Integer32",
+			  "double", "Real64",
+			  "complex", "Complex128",
+			  _, Return[$Failed]];
+	     SetStreamPosition[aff, o];
+	     d = BinaryReadList[aff, fmt, s, ByteOrdering -> 1];
+	     {t, d}];
 
-    affXClose[aO_] := 
+    affXClose[] := 
       Module[{},
 	     If [affOpened == False, Return[]];
 	     affOpened = False;
@@ -137,8 +137,15 @@ affOpen[fileName_String] :=
 	     affChildren =. ;
 	     affXGet =.;
 	     affXClose =. ;];
+    affXFormat[] :=
+      Module[{},
+	     If [affOpened, StringJoin["affObject[\"", fileName, "\"]"],
+			  "affObject[CLOSED]"]];
     affOpened = True;
-    { affXGet, affXClose }];
+    affObject[fileName, affXGet, affXClose, affXFormat]];
 
-affGet[aff_, path_String] := aff[[1]][aff, path];
-affClose[aff_] := aff[[2]][aff];
+affGet[affObject[fn_,get_,cl_,fmt_], path_String] := get[path];
+affClose[affObject[fn_,get_,cl_,fmt_]] := cl[];
+
+(* Nice print format for affObjects *)
+Format[affObject[fn_,a_,b_,fmt_]] := fmt[];

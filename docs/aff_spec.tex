@@ -29,6 +29,7 @@
 %\newcommand{\Synopsis}{{\textbf Synopsis}\\}
 %\newcommand{\RetValue}{{\textbf Return value}\\}
 \def\FuncHead#1{\pagebreak[3]\subsubsection{\libname{#1()}}}
+\def\MathFuncHead#1{\pagebreak[3]\subsubsection{\libname{#1[]}}}
 \def\Syn{\par\nopagebreak[4]\noindent{\bf Synopsis}\tt
   \everypar={\hangindent=64pt\hangafter=1
     \raggedright\hspace{16pt}}\par\noindent\nopagebreak[4]}
@@ -47,7 +48,7 @@
 \centerline{\it Andrew~V.~Pochinsky, Sergey~N.~Syritsyn}
 \centerline{\it MIT CTP, Cambridge, MA}
 \vspace{10pt}
-\centerline{November 29, 2007}
+\centerline{December 4, 2007}
 \vspace{20pt}
 
 \noindent This document describes the AFF data storage format. 
@@ -188,9 +189,9 @@ library reads both formats but writers only version 2 AFF files.
 \begin{tabular}{|l|c|c|} \hline
  & Size, bytes (V1) & Size, bytes (V2)\\ \hline\hline
 Signature & 32 & 32 \\ \hline
+Data header & 32 & 40 \\ \hline
 Symbol table header & 32 & 40 \\ \hline
 Tree header & 32 & 40 \\ \hline
-Data header & 32 & 40 \\ \hline
 Header MD5 sum & 16 & 16 \\ \hline\hline
 Total & 144 & 168 \\ \hline
 \end{tabular}
@@ -775,6 +776,7 @@ and should be maintained by the user.}
 \section{MD5 sum functions}
 This functions implement the MD5 cryptographic checksum as described in RFC~1321. The implementation
 is taken from the RFC, only the naming conventions were changed to confirm to the rest of the library.
+\subsection{The Interface}
 
 \FuncHead{aff\_md5\_init}
 {\Syn void~aff\_md5\_init (struct~AffMD5\_s~*);}
@@ -787,6 +789,36 @@ is taken from the RFC, only the naming conventions were changed to confirm to th
 \FuncHead{aff\_md5\_final}
 {\Syn void~aff\_md5\_final (uint8\_t~[16], struct~AffMD5\_s~*);}
 \Desc{Produce the final value of MD5 sum.}
+
+\newpage
+\section{AFF Mathematica Interface}
+By popular demand, there is also a read AFF interface for Wolfram's Mathematica.
+The interface consists of the following three functions; please note, however,
+that it is not as bullet-proof as the C interface---it does not do error
+checking to the same extend.
+
+You will need to load file \ctext{\$(prefix)/math/aff.m} into Mathematica to use
+the interface.
+\subsection{The Interface}
+
+\MathFuncHead{affOpen}
+{\Syn affHandle = affOpen [fileName];}
+\Desc{Open \cvar{fileName} as an AFF and prepare for reading data from it.}
+\RetVal{A handle to a Mathematica AFF object is returned.}
+
+\MathFuncHead{affGet}
+{\Syn \{type, \{data, ...\}\} = affGet [affHandle, keyPath];}
+\Desc{Read data stored under the \cvar{keyPath} in the AFF handle
+ \cvar{affHandle} which should have been previosly opened with
+ \ctext{affOpen[]}.}
+\RetVal{If \cvar{keyPath} is not present, return \ctext{\$Failure}; otherwise,
+ the type of data and the data itself are returned.
+ The data is returned as a list of values.}
+
+\MathFuncHead{affClose}
+{\Syn affClose [affHandle];}
+\Desc{Close the file associated with \ctext{affHandle} and free all allocated
+resources.}
 
 \printindex
 
