@@ -115,6 +115,9 @@ coding.headers = coding.h
 
 io.sources = io.c
 
+cpp.sources = rwaff.cpp \
+	      mdarray.cpp
+
 io.headers = io.h
 
 interface.parts = aff.h node.h tree.h stable.h treap.h md5.h coding.h
@@ -145,12 +148,15 @@ $(interface): $(interface.parts) interface.prologue interface.epilogue
 
 $(interface): Makefile
 
-$(library): $(sources:%.c=%.o)
-	$(AR) cr $(library) $(sources:%.c=%.o)
+$(library): $(sources:%.c=%.o) $(cpp.sources:%.cpp=%.o)
+	$(AR) cr $(library) $(sources:%.c=%.o) $(cpp.sources:%.cpp=%.o)
 	$(RANLIB) $(library)
 
 $(sources:%.c=%.o): %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(cpp.sources:%.cpp=%.o): %.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 $(node.sources:%.c=%.o): $(node.headers)
 $(treap.sources:%.c=%.o): $(treap.headers)
@@ -160,6 +166,7 @@ $(md5.sources:%.c=%.o): $(md5.headers)
 $(aff.sources:%.c=%.o): $(aff.headers) md5.h tree.h stable.h coding.h io.h
 $(coding.sources:%.c=%.o): $(coding.headers) node.h
 $(io.sources:%.c=%.o): $(io.headers)
+$(cpp.sources:%.cpp=%.o): $(interface)
 
 endif
 
