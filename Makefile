@@ -62,6 +62,9 @@ do.install: lhpc-aff-config docs/aff_spec.pdf COPYRIGHT
 	$(RM) $(prefix_include)/lhpc-aff.h
 	cp lib/lhpc-aff.h $(prefix_include)/lhpc-aff.h
 	chmod 444 $(prefix_include)/lhpc-aff.h
+	$(RM) $(prefix_include)/lhpc-aff++.h
+	cp lib/lhpc-aff++.h $(prefix_include)/lhpc-aff++.h
+	chmod 444 $(prefix_include)/lhpc-aff++.h
 	mkdir -p $(prefix_doc)
 	for f in docs/aff_spec.pdf COPYRIGHT; do \
 	   bf=`basename $$f`; \
