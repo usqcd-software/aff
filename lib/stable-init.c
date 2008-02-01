@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <stdlib.h>
-#include "treap.h"
 #include "stable-i.h"
 
 static struct AffSTable_s *
@@ -32,11 +31,8 @@ aff_stable_init(uint64_t size)
     if (st == 0)
 	return 0;
 
-    st->treap = aff_treap_init();
-    if (st->treap == 0) {
-	free(st);
-	return 0;
-    }
+    st->tr_state = RINIT;
+    st->tr_root = 0;
     st->size = 0;
     st->last_block = &st->block;
     aff_stable_iblock(&st->block, 0, size);

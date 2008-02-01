@@ -12,11 +12,12 @@
  * 2007/11/29 avp -- final rc3 for v 2.0.0
  * 2007/11/30 avp -- v 2.0.0
  * 2007/12/04 avp -- v 2.0.2
+ * 2008/02/01 avp -- v 2.1.0x
  */
 const char *
 aff_version(void)
 {
-    return "LHPC AFF v.2.0.0 $Revision$ $Date$"
+    return "LHPC AFF v.2.1.0x $Revision$ $Date$"
 #ifdef AFF_DEBUG
      "  DEBUG VERSION"
 #endif

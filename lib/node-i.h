@@ -8,6 +8,9 @@ struct Key_s {
 };
 
 struct AffNode_s {
+    struct AffNode_s     *left;
+    struct AffNode_s     *right;
+    uint32_t              hash;
     enum AffNodeType_e    type;
     struct Key_s          key;
     uint64_t              id;

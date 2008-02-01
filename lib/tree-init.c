@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include "treap.h"
 #include "stable.h"
 #include "node-i.h"
 #include "tree-i.h"
@@ -36,11 +35,8 @@ aff_tree_init(struct AffSTable_s *stable, uint64_t size)
     if (tt == 0)
 	return 0;
 
-    tt->treap = aff_treap_init();
-    if (tt->treap == 0) {
-	free(tt);
-	return 0;
-    }
+    tt->tr_state = RSTEP;
+    tt->tr_root = 0;
     tt->size = 1;
     tt->file_size = 0;
     tt->last_block = &tt->block;

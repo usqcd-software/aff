@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "treap.h"
 #include "stable-i.h"
 
 const struct AffSymbol_s *
@@ -15,7 +14,16 @@ aff_stable_insert(struct AffSTable_s *st, const char *name)
 	return 0;
 
     len = strlen(name) + 1;
-    sym = aff_treap_lookup(st->treap, name, len);
+    /* must agree with stable_lookup() */
+    for (sym = st->tr_root; sym;) {
+	int cmp = strcmp(name, sym->name);
+	if (cmp == 0)
+	    break;
+	if (cmp < 0)
+	    sym = sym->left;
+	else
+	    sym = sym->right;
+    }
     if (sym)
 	return sym;
 
@@ -40,9 +48,40 @@ aff_stable_insert(struct AffSTable_s *st, const char *name)
 	return 0;
     strcpy((char *)sym->name, name);
     sym->id = st->size;
-    if (aff_treap_insert(st->treap, sym->name, len, sym) != 0) {
-	free((void *)sym->name);
-	return 0;
+    /* must agree with lookup code */
+    {
+	uint32_t x;
+	struct AffSymbol_s *p;
+	struct AffSymbol_s **l;
+	struct AffSymbol_s **r;
+	struct AffSymbol_s **w;
+
+	x = sym->hash = st->tr_state += RSTEP;
+	sym->left = sym->right = 0;
+	for (p = st->tr_root, w = &st->tr_root; p && p->hash < x; p = *w) {
+	    int cmp = strcmp(name, p->name);
+	    if (cmp < 0) {
+		w = &p->left;
+	    } else {
+		w = &p->right;
+	    }
+	}
+	*w = sym;
+	l = &sym->left;
+	r = &sym->right;
+	while (p) {
+	    int cmp = strcmp(name, p->name);
+	    if (cmp < 0) {
+		*r = p;
+		r = &p->left;
+		p = *r;
+	    } else {
+		*l = p;
+		l = &p->right;
+		p = *l;
+	    }
+	}
+	*l = *r = 0;
     }
     b->used++;
     st->size++;

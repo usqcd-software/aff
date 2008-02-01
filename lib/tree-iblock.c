@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <stdarg.h>
-#include "treap.h"
 #include "stable.h"
 #include "node-i.h"
 #include "tree-i.h"

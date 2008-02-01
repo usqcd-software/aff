@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "stable-i.h"
-#include "treap.h"
 
 void *
 aff_stable_fini(struct AffSTable_s *st)
@@ -11,7 +10,6 @@ aff_stable_fini(struct AffSTable_s *st)
 
     if (st == 0)
 	return 0;
-    aff_treap_fini(st->treap);
     for (i = 0; i < st->block.used; i++)
 	free((void *)(st->block.symbol[i].name));
     for (bl = st->block.next; bl;) {
