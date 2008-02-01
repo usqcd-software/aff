@@ -83,6 +83,7 @@ aff.sources = aff-signature.c \
               waff-stable.c \
               waff-tree.c \
               waff-mkdir.c \
+              waff-mkpath.c \
               waff-putchar.c \
               waff-putint.c \
               waff-putdouble.c \
@@ -96,10 +97,12 @@ aff.sources = aff-signature.c \
               raff-stable.c \
               raff-tree.c \
               raff-chdir.c \
+              raff-chpath.c \
               raff-getchar.c \
               raff-getint.c \
               raff-getdouble.c \
               raff-getcomplex.c \
+              separator.c
 
 aff.headers = aff-i.h \
               aff.h

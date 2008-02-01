@@ -67,4 +67,6 @@ struct AffReader_s {
 extern uint8_t aff_signature1[];
 extern uint8_t aff_signature2[];
 
+char *aff_strsep(char *str, char **end, char delim);
+
 #endif /* !defined(MARK_6f9650e1_45e8_4695_81a9_8c3672baee90) */
