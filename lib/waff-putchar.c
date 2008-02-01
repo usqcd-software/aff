@@ -30,6 +30,7 @@ aff_node_put_char(struct AffWriter_s *aff,
     aff_node_assign(n, affNodeChar, s, aff->position);
     if (fwrite(d, s, 1, aff->file) != 1) {
 	aff->error = strerror(errno);
+	aff->fatal_error = 1;
 	return 1;
     }
     aff_md5_update(&aff->data_hdr.md5, (const uint8_t *)d, s);

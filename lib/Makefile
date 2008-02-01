@@ -78,6 +78,7 @@ aff.sources = aff-signature.c \
               waff-init.c \
               waff-fini.c \
               waff-errstr.c \
+              waff-clearerr.c \
               waff-root.c \
               waff-stable.c \
               waff-tree.c \
@@ -90,6 +91,7 @@ aff.sources = aff-signature.c \
               raff-fini.c \
               raff-check.c \
               raff-errstr.c \
+	      raff-clearerr.c \
               raff-root.c \
               raff-stable.c \
               raff-tree.c \

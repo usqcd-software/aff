@@ -24,6 +24,7 @@ aff_node_get_double(struct AffReader_s *aff,
 	return 1;
     if (aff->file == 0) {
 	aff->error = "NULL file in aff_get_node_double()";
+	aff->fatal_error = 1;
 	return 1;
     }
     if (n == 0) {

@@ -35,10 +35,12 @@ aff_node_put_double(struct AffWriter_s *aff,
     for (i = 0; i < s; i++) {
 	if (aff_encode_double(buf, sizeof(buf), d[i]) == 0) {
 	    aff->error = "double encoder failed";
+	    aff->fatal_error = 1;
 	    return 1;
 	}
 	if (fwrite(buf, sizeof (buf), 1, aff->file) != 1) {
 	    aff->error = strerror(errno);
+	    aff->fatal_error = 1;
 	    return 1;
 	}
 	aff_md5_update(&aff->data_hdr.md5, (const uint8_t *)buf, sizeof (buf));

@@ -29,6 +29,7 @@ struct AffWriter_s {
     struct AffMD5_s      header_md5;
     int                  header_size;
     const char          *error;
+    int                  fatal_error;
 
     FILE                *file;
     uint64_t             position;
@@ -50,6 +51,7 @@ struct RSection_s {
 
 struct AffReader_s {
     const char          *error;
+    int                  fatal_error;
 
     FILE                *file;
     uint64_t             position;

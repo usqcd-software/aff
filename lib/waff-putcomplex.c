@@ -41,10 +41,12 @@ aff_node_put_complex(struct AffWriter_s *aff,
 	ptr = aff_encode_double(ptr, sizeof(buf) - (ptr - buf), cimag(d[i]));
 	if (ptr == 0) {
 	    aff->error = "complex encoder failed";
+	    aff->fatal_error = 1;
 	    return 1;
 	}
 	if (fwrite(buf, ptr - buf, 1, aff->file) != 1) {
 	    aff->error = strerror(errno);
+	    aff->fatal_error = 1;
 	    return 1;
 	}
 	aff_md5_update(&aff->data_hdr.md5, buf, ptr - buf);

@@ -40,6 +40,7 @@ unpack1(struct AffReader_s *aff, struct RSection_s *section,
     return;
 error:
     aff->error = error_msg;
+    aff->fatal_error = 1;
 }
 
 static void
@@ -70,6 +71,7 @@ unpack2(struct AffReader_s *aff, struct RSection_s *section,
     return;
 error:
     aff->error = error_msg;
+    aff->fatal_error = 1;
 }
 
 static int
@@ -81,19 +83,23 @@ read_sig(struct AffReader_s *aff,
     
     if (memcmp(sig, aff_sig, AFF_SIG_ID_SIZE) != 0) {
 	aff->error = "AFF signature mismatch";
+	aff->fatal_error = 1;
 	return 1;
     }
 
     if (sig[AFF_SIG_OFF_DBITS] != sizeof (double) * CHAR_BIT) {
 	aff->error = "AFF size of double mismatch";
+	aff->fatal_error = 1;
 	return 1;
     }
     if (sig[AFF_SIG_OFF_RADIX] != FLT_RADIX || FLT_RADIX != 2) {
 	aff->error = "AFF double radix mismatch";
+	aff->fatal_error = 1;
 	return 1;
     }
     if (sig[AFF_SIG_OFF_MANT] != DBL_MANT_DIG) {
 	aff->error = "AFF double mantissa size mismatch";
+	aff->fatal_error = 1;
 	return 1;
     }
 
@@ -101,10 +107,12 @@ read_sig(struct AffReader_s *aff,
 		       (uint8_t *)sig + AFF_SIG_OFF_EXP,
 		       AFF_SIG_SIZE - AFF_SIG_OFF_EXP) == 0) {
 	aff->error = "AFF error decoding double exponent sizes";
+	aff->fatal_error = 1;
 	return 1;
     }
     if ((d_exp >> 16 != DBL_MAX_EXP) || ((d_exp & 0xffff) != (-DBL_MIN_EXP))) {
 	aff->error = "AFF exponent limits mismatch";
+	aff->fatal_error = 1;
 	return 1;
     }
     return 0;
@@ -123,6 +131,7 @@ read_header1(struct AffReader_s *aff,
 
     if (fread(buf, sizeof (buf), 1, aff->file) != 1) {
 	aff->error = "Reading V1 header failed";
+	aff->fatal_error = 1;
 	return 1;
     }
 
@@ -132,6 +141,7 @@ read_header1(struct AffReader_s *aff,
     aff_md5_final(md5_read, &md5);
     if (memcmp(md5_read, buf + sizeof (buf) - 16, 16) != 0) {
 	aff->error = "V1 header checksum failed";
+	aff->fatal_error = 1;
 	return 1;
     }
     
@@ -154,6 +164,7 @@ read_header2(struct AffReader_s *aff,
 
     if (fread(buf, sizeof (buf), 1, aff->file) != 1) {
 	aff->error = "Reading V2 header failed";
+	aff->fatal_error = 1;
 	return 1;
     }
 
@@ -163,6 +174,7 @@ read_header2(struct AffReader_s *aff,
     aff_md5_final(md5_read, &md5);
     if (memcmp(md5_read, buf + sizeof (buf) - 16, 16) != 0) {
 	aff->error = "V2 header checksum failed";
+	aff->fatal_error = 1;
 	return 1;
     }
     
@@ -194,6 +206,7 @@ aff_reader(const char *file_name)
     aff->file = fopen(file_name, "rb");
     if (aff->file == 0) {
 	aff->error = strerror(errno);
+	aff->fatal_error = 1;
 	return aff;
     }
     if (fread(file_sig, AFF_SIG_SIZE, 1, aff->file) != 1) {
@@ -359,6 +372,7 @@ aff_reader(const char *file_name)
 
     return aff;
 error:
+    aff->fatal_error = 1;
     if (sb)
 	free(sb);
     sb = 0;

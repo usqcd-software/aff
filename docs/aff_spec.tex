@@ -43,7 +43,9 @@
 \begin{document}
 \centerline{\huge\bf AFF lattice data storage format}
 \vspace{15pt}
-\centerline{\huge\bf Version 2}
+\centerline{\huge\bf Version 2.1}
+\vspace{15pt}
+\centerline{\Huge\bf DRAFT}
 \vspace{20pt}
 \centerline{\it Andrew~V.~Pochinsky, Sergey~N.~Syritsyn}
 \centerline{\it MIT CTP, Cambridge, MA}
@@ -55,9 +57,7 @@
 The AFF is hierarchical data format, efficient both in space and access time 
 for storage of multiple small amounts of data.
 
-\newpage
 \tableofcontents
-\newpage
 
 \section{Purpose of AFF}
 Lattice calculations produce a lot of data. 
@@ -161,7 +161,6 @@ following grammar (this is a subset of XML names):
 \end{eqnarray*}
 The subkeys are case-sensitive as the are in XML.
 
-\newpage
 \section{Data file layout}
 An AFF file has:
 \bi
@@ -298,7 +297,6 @@ Total & 25 \\ \hline
 \ec
 \end{table}
 
-\newpage
 \section{AFF library interface}
 AFF library is written in C and can be used by including a library
 header file \verb|lhpc-aff.h|.  There is also \verb|lhpc-aff-config|
@@ -341,7 +339,14 @@ The interface consists of three parts.
 \item Reader routines are used to read data from AFF files and to navigate
     through the key.
 \end{itemize}
-\newpage
+
+During a call to the AFF library, an error may occur. The library always
+associates an error with an AFF object, an once a call placed an object into an
+error state, the object will reject all calls except to \ctext{errstr},
+\ctext{clearerr} and \ctext{close}. An error may be fatal to an object (e.g.,
+opening a reader failed), or non-fatal. A non-fatal error can be cleaned by
+calling \ctext{clearerr}. An object with a fatal error may only be closed.
+
 \subsection{Library information}
 
 \FuncHead{aff\_version}
@@ -355,7 +360,13 @@ The interface consists of three parts.
 value if it does not.}
 \RetVal{Zero if \cvar{name} is a permissible name, a non-zero value otherwise.}
 
-\newpage
+\FuncHead{aff\_path\_check}
+{\Syn int aff\_path\_check (const char *path);\par}
+\Desc{Check that each component of \cvar{path} satisfies the constraints of
+section~\ref{file-org} and returns a non-zero value if it does not. If there is
+no components in \cvar{path}, and it is not \ctext{"/"}, signal an error.}
+\RetVal{Zero if \cvar{path} is a permissible path, a non-zero value otherwise.}
+
 \subsection{Writers}
 \FuncHead{aff\_writer}
 {\Syn struct~AffWriter\_s~*aff\_writer (const~char~*fname);\par}
@@ -380,14 +391,17 @@ value if it does not.}
 
 \FuncHead{aff\_writer\_errstr}
 {\Syn const~char~*aff\_writer\_errstr (struct~AffWriter\_s~*aff);\par}
-\Desc{Return a description of the error associated with the writer object.
-  AFF implements latching errors: if an error occurs on a writer object, 
-  this object will signal errors on all subsequent calls. 
-  The first error message is stored in the object and is accessible 
-  via \ctext{aff\_writer\_errstr()} call.}
+\Desc{Return a description of the error associated with the writer object.}
 \RetVal{Return the string describing the error recorded in the writer object, or \NULL\ if there were no errors.}
 
-\newpage
+\FuncHead{aff\_writer\_clearerr}
+{\Syn int aff\_write\_clearerr (struct~AffWriter\_s~*aff);\par}
+\Desc{Attempt to clear error state in \cvar{aff}. If there is no error in the
+writer, or an error is not fatal, the writer will be set to clean state and
+a zero will be returned. If \cvar{aff} has a fatal error, the writer remains in
+error and a non zero value is returned.}
+\RetVal{Return zero if the writer is cleaned, a non-zero value otherwise.}
+
 \FuncHead{aff\_writer\_stable}
 {\Syn struct~AffSTable\_s~*aff\_writer\_stable (struct~AffWriter\_s~*aff);\par}
 \Desc{Get the pointer the symbol table of the writer.}
@@ -415,7 +429,20 @@ value if it does not.}
   i.e. the writer is not initialized, the name already exists, or not 
   enough memory.}
 
-\newpage
+\FuncHead{aff\_writer\_mkpath}
+{\Syn struct~AffNode\_s~*aff\_writer\_mkpath (struct~AffWriter\_s~*aff,
+  struct~AffNode\_s~*dir, const~char~*path);\par}
+\Desc{Parse the keypath \cvar{path}; if it starts with a slash \ctext{/},
+ignore the value of \cvar{dir} and start from the root of \cvar{aff},
+otherwise start from \cvar{dir}. For each
+component of the keypath, construct a \ctext{affNodeVoid} node in the current
+directory if it does not exist and change to it. Return the last node
+constructed or \NULL\ if an error occured. If the last node already exists, it
+will be returned, in this case a further call placing data might fail if the
+key has been already set to some type.}
+\RetVal{Return the pointer to the new key node on success, and \NULL\ on
+ failure.}
+
 \FuncHead{aff\_node\_put\_{\it type}}
 {\Syn int~aff\_node\_put\_char (struct~AffWriter\_s~*aff,
   struct~AffNode\_s~*n, const~char~*d, uint32\_t~s);
@@ -452,11 +479,18 @@ value if it does not.}
 {\Syn void~aff\_reader\_close (struct~AffReader\_s~*aff);\par}
 \Desc{Close a file, deallocate a reader and all its tables.}
 
-\newpage
 \FuncHead{aff\_reader\_errstr}
 {\Syn const~char~*aff\_reader\_errstr (struct~AffReader\_s~*aff);\par}
 \Desc{Get an error string from the last failure.}
 \RetVal{Return a pointer to a string, or \NULL\ if no errors have occurred.}
+
+\FuncHead{aff\_reader\_clearerr}
+{\Syn int~aff\_reader\_errstr (struct~AffReader\_s~*aff);\par}
+\Desc{Attempt to clear error state in \cvar{aff}. If there is no error in the
+reader, or an error is not fatal, the reader will be set to clean state and
+a zero will be returned. If \cvar{aff} has a fatal error, the reader remains in
+error and a non zero value is returned.}
+\RetVal{Return zero if the reader is cleaned, a non-zero value otherwise.}
 
 \FuncHead{aff\_reader\_stable}
 {\Syn struct~AffSTable\_s~*aff\_reader\_stable (const~struct~AffReader\_s~*aff);\par}
@@ -476,15 +510,26 @@ value if it does not.}
 \RetVal{Return a pointer to the root node handler, or \NULL\ if \cvar{aff} 
   is not initialized.}
 
-\newpage  
 \FuncHead{aff\_reader\_chdir}
 {\Syn struct~AffNode\_s~*aff\_reader\_chdir (struct~AffReader\_s~*aff, 
   struct~AffNode\_s~*dir, const~char~*name);\par}
 \Desc{Get the handler to the subkey \cvar{name} in the key node \cvar{dir}.
-  If the node does not exist, an error will be set in the reader object. Note that this function should not be
-  used to probe for presence of a subkey because of failure it will render the reader unusable.}
+  If the node does not exist, an error will be set in the reader object.}
 \RetVal{Return a pointer to the handler or \NULL\ if it does not exist 
   or there is other failure.}
+
+\FuncHead{aff\_reader\_chpath}
+{\Syn struct~AffNode\_s~*aff\_reader\_chpath (struct~AffReader\_s *aff,
+  struct~AffNode\_s~*dir, const~char~*path);\par}
+\Desc{Parse the \cvar{path} as a keypath. If \cvar{path} starts with a slash
+\ctext{/}
+it is considered an absolute keypath and the value of \cvar{dir} is ignored;
+otherwise, it is intepreted relative to
+\cvar{dir}. The function recursively performs change directory operation for
+each subkey in the parsed keypath. If at any step a subkey does not exist, an
+error is set in \cvar{aff}. If all subkeys of the path are present, a pointer
+to the last node is returned.}
+\RetVal{Return a pointer to the handle or \NULL\ if an error was detected.}
 
 \FuncHead{aff\_node\_get\_{\it type}}
 {\Syn int~aff\_node\_get\_char (const~struct~AffReader\_s~*aff, 
@@ -504,7 +549,6 @@ value if it does not.}
   }
 \RetVal{Return zero on success, and non-zero on failure. An failure causes an error to be stored in the reader object.}
 
-\newpage
 \section{AFF low level interfaces}
 The rest of AFF provides low level access to the library
 structures. Some of them are exported only because they are perceived
@@ -533,7 +577,6 @@ functions below with respect.
   is internal to the reader(writer) and must not be freed. If \cvar{n} is \NULL,
   return \NULL.}
 
-\newpage
 \FuncHead{aff\_node\_parent}
 {\Syn struct AffNode\_s~*aff\_node\_parent (const~struct~AffNode\_s~*n);\par}
 \Desc{Get the handler of node's parent. The parent of the root node is the root itself.}
@@ -597,7 +640,6 @@ functions below with respect.
  used.}
 \RetVal{Return a pointer to a new AFF tree, or \NULL\ if allocation failed.}
 
-\newpage
 \FuncHead{aff\_tree\_fini}
 {\Syn void~*aff\_tree\_fini (struct~AffTree\_s~*tree);\par}
 \Desc{Free AFF data structure.}
@@ -621,7 +663,6 @@ functions below with respect.
 \Desc{Get the root of the \cvar{tree}. The root is always present.}
 \RetVal{Return a pointer to the root, or \NULL\ if \cvar{tree} is \NULL.}
 
-\newpage
 \FuncHead{aff\_tree\_lookup}
 {\Syn struct~AffNode\_s~*aff\_tree\_lookup (const~struct~AffTree\_s~*tree,
   const~struct~AffNode\_s~*parent, const~struct~AffSymbol\_s~*name);\par}
@@ -655,7 +696,6 @@ functions below with respect.
 %\RetVal{Return the size in bytes, or zero if \cvar{tn} is \NULL}
 %
 
-\newpage
 \subsection{Symbol table}
 
 \FuncHead{aff\_stable\_init}
@@ -790,7 +830,6 @@ is taken from the RFC, only the naming conventions were changed to confirm to th
 {\Syn void~aff\_md5\_final (uint8\_t~[16], struct~AffMD5\_s~*);}
 \Desc{Produce the final value of MD5 sum.}
 
-\newpage
 \section{AFF Mathematica Interface}
 By popular demand, there is also a read AFF interface for Wolfram's Mathematica.
 The interface consists of the following three functions; please note, however,

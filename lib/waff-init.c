@@ -29,23 +29,27 @@ aff_writer(const char *file_name)
     aff->stable = aff_stable_init(0);
     if (aff->stable == 0) {
 	aff->error = "Not enough memory for stable in aff_writer()";
+	aff->fatal_error = 1;
 	goto error;
     }
 
     aff->tree = aff_tree_init(aff->stable, 0);
     if (aff->tree == 0) {
 	aff->error = "Not enough memory for tree in aff_writer()";
+	aff->fatal_error = 1;
 	goto error;
     }
 
     memset(dummy_header, 0, AFF_HEADER_SIZE2);
     if (fwrite(dummy_header, AFF_HEADER_SIZE2, 1, aff->file) != 1) {
 	aff->error = "Error writing dummy header in aff_writer()";
+	aff->fatal_error = 1;
 	goto error;
     }
     
     if (FLT_RADIX != 2 || sizeof(double) > sizeof (uint64_t)) {
 	aff->error = "Unsupported double format in aff_writer()";
+	aff->fatal_error = 1;
 	goto error;
     }
 

@@ -22,10 +22,12 @@ aff_reader_check(struct AffReader_s *aff)
 
     if (aff->file == 0) {
 	aff->error = "AFF file is closed";
+	aff->fatal_error = 1;
 	return 1;
     }
     if (aff_file_setpos(aff->file, aff->data_hdr.start) != 0) {
 	aff->error = "data positioning error";
+	aff->fatal_error = 1;
 	return 1;
     }
     aff_md5_init(&md5);
@@ -34,6 +36,7 @@ aff_reader_check(struct AffReader_s *aff)
 	uint32_t block = tail > BUFFER_SIZE? BUFFER_SIZE: (uint32_t)tail;
 	if (fread(buffer, block, 1, aff->file) != 1) {
 	    aff->error = "data reading error";
+	    aff->fatal_error = 1;
 	    return 1;
 	}
 	aff_md5_update(&md5, buffer, block);
@@ -42,6 +45,7 @@ aff_reader_check(struct AffReader_s *aff)
     aff_md5_final(sum, &md5);
     if (memcmp(sum, aff->data_hdr.md5, 16) != 0) {
 	aff->error = "data checksum error";
+	aff->fatal_error = 1;
 	return 1;
     }
     return 0;

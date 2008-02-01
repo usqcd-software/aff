@@ -24,6 +24,7 @@ out_string(const struct AffSymbol_s *symbol, void *arg)
 
 	if (fwrite(name, size, 1, aff->file) != 1) {
 	    aff->error = "Symbol writing error";
+	    aff->fatal_error = 1;
 	    return;
 	}
 	aff_md5_update(&aff->stable_hdr.md5, (const uint8_t *)name, size);
@@ -59,11 +60,13 @@ out_node(struct AffNode_s *node, void *arg)
 	}
 	if (buf == 0) {
 	    aff->error = "Node encoding overrun";
+	    aff->fatal_error = 1;
 	    return;
 	}
 	size = buf - &block[0];
 	if (fwrite(block, size, 1, aff->file) != 1) {
 	    aff->error = "Node writing error";
+	    aff->fatal_error = 1;
 	    return;
 	}
 	aff_md5_update(&aff->tree_hdr.md5, block, size);
@@ -92,6 +95,7 @@ pack(struct AffWriter_s *aff, struct WSection_s *section, char *error_msg)
     size = (buf - &block[0]);
     if (buf == 0 || sizeof (block) - size < 16) {
 	aff->error = "Section header encoding overrun";
+	aff->fatal_error = 1;
 	return;
     }
 
@@ -99,6 +103,7 @@ pack(struct AffWriter_s *aff, struct WSection_s *section, char *error_msg)
     size += 16;
     if (fwrite(block, size, 1, aff->file) != 1) {
 	aff->error = error_msg;
+	aff->fatal_error = 1;
 	return;
     }
     aff_md5_update(&aff->header_md5, block, size);
@@ -137,6 +142,7 @@ aff_writer_close(struct AffWriter_s *aff)
 
     if (aff_file_setpos(aff->file, 0) != 0) {
 	aff->error = "AFF positioning error";
+	aff->fatal_error = 1;
 	goto end;
     }
 
@@ -144,6 +150,7 @@ aff_writer_close(struct AffWriter_s *aff)
     aff->header_size = strlen((const char *)aff_signature2) + 1;
     if (fwrite(aff_signature2, aff->header_size, 1, aff->file) != 1) {
 	aff->error = "AFF Signature writing erorr";
+	aff->fatal_error = 1;
 	goto end;
     }
     aff_md5_update(&aff->header_md5, aff_signature2, aff->header_size);
@@ -157,12 +164,14 @@ aff_writer_close(struct AffWriter_s *aff)
 			 AFF_HEADER_SIZE2);
     if (ptr == 0) {
 	aff->error = "Can't encode DBL_MIN_EXP";
+	aff->fatal_error = 1;
 	goto end;
     }
     size = ptr - buffer;
     aff->header_size += size;
     if (fwrite(buffer, size, 1, aff->file) != 1) {
 	aff->error = "AFF size signature writing error";
+	aff->fatal_error = 1;
 	goto end;
     }
     aff_md5_update(&aff->header_md5, buffer, size);
@@ -177,12 +186,14 @@ aff_writer_close(struct AffWriter_s *aff)
     aff->header_size += 16;
     if (fwrite(buffer, 16, 1, aff->file) != 1) {
 	aff->error = "AFF checksum writing error";
+	aff->fatal_error = 1;
 	goto end;
     }
 
     /* This is an assert() really */
     if (aff->header_size != AFF_HEADER_SIZE2) {
 	aff->error = "AFF INTERNAL ERROR: header size mismatch";
+	aff->fatal_error = 1;
 	goto end;
     }
 
