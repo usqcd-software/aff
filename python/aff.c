@@ -803,14 +803,11 @@ static PyMethodDef paff_methods[] = {
 PyMODINIT_FUNC
 initaff(void) 
 {
+    static char *exception_name = "aff.Exception";
     PyObject* m;
 
     m = Py_InitModule3("aff", paff_methods, "AFF interface.");
     if (m == NULL)
-        return;
-
-    paff_exception = PyErr_NewException("aff.Exception", NULL, NULL);
-    if (paff_exception == NULL)
         return;
 
     paff_ReaderType.tp_name = "aff.Reader";
@@ -848,4 +845,16 @@ initaff(void)
                            paff_WriterType.tp_name + 4,
                            (PyObject *)&paff_WriterType))
         return;
+
+    paff_exception = PyErr_NewException(exception_name, NULL, NULL);
+    if (paff_exception == NULL)
+        return;
+
+    Py_INCREF(paff_exception);
+    if (PyModule_AddObject(m,
+                           exception_name + 4,
+                           (PyObject *)paff_exception))
+        return;
+
+    return;
 }
