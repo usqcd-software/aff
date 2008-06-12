@@ -5,6 +5,9 @@
  * \author Sergey N. Syritsyn
  * 
  * \date Created: 30/08/2007
+ *    2008/06/09 avp -- changes for 
+ *                 mkdir_path() --> aff_writer_mkpath()
+ *                 chdir_path() --> aff_reader_chpath()
  *
  ***************************************************************************/
 #include <stdio.h>
@@ -36,7 +39,8 @@ static int do_copy( struct AffReader_s *r, struct AffWriter_s *w,
                 __func__, src_kpath );
         return 1;
     }
-    struct AffNode_s *w_node = mkdir_path( w, aff_writer_root( w ), dst_kpath );
+    struct AffNode_s *w_node = aff_writer_mkpath(w, aff_writer_root(w),
+                                                 dst_kpath);
     if( NULL == w_node )
     {
         fprintf( stderr, "%s: cannot write to key [%s]: %s\n", 

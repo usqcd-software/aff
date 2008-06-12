@@ -5,6 +5,9 @@
  * \author Sergey N. Syritsyn
  * 
  * \date Created: 23/08/2007
+ *    2008/06/09 avp -- changes for 
+ *                 mkdir_path() --> aff_writer_mkpath()
+ *                 chdir_path() --> aff_reader_chpath()
  *
  ***************************************************************************/
 #include <assert.h>
@@ -313,7 +316,7 @@ int x_import( int argc, char *argv[] )
         fprintf( stderr, "%s: %s\n", __func__, aff_writer_errstr( w ) );
         goto err_clean_w;
     }
-    struct AffNode_s *w_node = mkdir_path( w, w_root, key_path );
+    struct AffNode_s *w_node = aff_writer_mkpath(w, w_root, key_path);
     if( NULL == w_node )
     {
         fprintf( stderr, "%s: %s: %s\n", __func__, key_path, aff_writer_errstr( w ) );
@@ -364,13 +367,13 @@ int x_import( int argc, char *argv[] )
         fprintf( stderr, "%s: %s\n", __func__, status );
         if( remove( tmp_fname ) )
             perror( __func__ );
-	goto err_clean_tfn;
+        goto err_clean_tfn;
     }
     if( rename( tmp_fname, out_fname ) )
     {
         perror( __func__ );
         fprintf( stderr, "%s: output is saved to %s\n", __func__, tmp_fname );
-	goto err_clean_tfn;
+        goto err_clean_tfn;
     }
     free( tmp_fname );
     return 0;

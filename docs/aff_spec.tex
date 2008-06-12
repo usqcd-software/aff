@@ -30,6 +30,8 @@
 %\newcommand{\RetValue}{{\textbf Return value}\\}
 \def\FuncHead#1{\pagebreak[3]\subsubsection{\libname{#1()}}}
 \def\MathFuncHead#1{\pagebreak[3]\subsubsection{\libname{#1[]}}}
+\def\PythonClassHead#1{\pagebreak[3]\subsection{\libname{#1}}}
+\def\PythonFuncHead#1{\pagebreak[3]\subsubsection{\libname{#1()}}}
 \def\Syn{\par\nopagebreak[4]\noindent{\bf Synopsis}\tt
   \everypar={\hangindent=64pt\hangafter=1
     \raggedright\hspace{16pt}}\par\noindent\nopagebreak[4]}
@@ -462,7 +464,7 @@ key has been already set to some type.}
 \RetVal{Return zero on success, and non-zero on failure.}
 %put a complex array ``d'' of size ``s'' into AFF file ``aff'' key node ``n'';
 
-\subsection{Reader}
+\subsection{Readers}
 
 \FuncHead{aff\_reader}
 {\Syn struct~AffReader\_s~*aff\_reader (const~char~*file\_name);\par}
@@ -485,7 +487,7 @@ key has been already set to some type.}
 \RetVal{Return a pointer to a string, or \NULL\ if no errors have occurred.}
 
 \FuncHead{aff\_reader\_clearerr}
-{\Syn int~aff\_reader\_errstr (struct~AffReader\_s~*aff);\par}
+{\Syn int~aff\_reader\_clearerr (struct~AffReader\_s~*aff);\par}
 \Desc{Attempt to clear error state in \cvar{aff}. If there is no error in the
 reader, or an error is not fatal, the reader will be set to clean state and
 a zero will be returned. If \cvar{aff} has a fatal error, the reader remains in
@@ -858,6 +860,190 @@ the interface.
 {\Syn affClose [affHandle];}
 \Desc{Close the file associated with \ctext{affHandle} and free all allocated
 resources.}
+
+\section{AFF Python Interface}
+For scripting purposes one can use Python module \ctext{aff} provided with the
+distribution. The module provides its own exception type, reader and writer
+types, and a library version query function.
+
+In Python errors are reported by raising exceptions. The \ctext{aff} module
+provides its own exception type which is used to report AFF-specific errors.
+
+Types used by AFF are different from types native to Python. To make integration
+simpler, each AFF data type is uniquely mapped into a Python type.
+Table~\ref{python} shows the correspondance between AFF and Python types and
+values. In case of AFF writers, all elements of the data written to a key should
+have the same Python type, otherwise and exception will be raised.
+\begin{table}[ht]
+\bc
+\caption{Mapping to Python types and values}\label{python}
+\begin{tabular}{|c|c|c|}\hline
+AFF Type & Python type & Python value \\ \hline
+Void & empty list & \ctext{[]} \\
+Char & string & \ctext{'foo'} \\
+Int & list of int & \ctext{[1, 4, 5, 1, 53, 64, 137]} \\
+Double & list of float & \ctext{[0.5786, 1.234, -6.34123]} \\
+Complex & list of complex & \ctext{[1+2j, 5-9j, 0j, -1j, 936+1e-40j]}\\ \hline
+\end{tabular}
+\ec
+\end{table}
+
+\subsection{The Interface}
+\PythonFuncHead{aff.version}
+{\Syn aff.version()}
+\Desc{Returns a string corresponging to the call \ctext{aff\_version()}.}
+\RetVal{A string describing the AFF library version.}
+
+\PythonClassHead{aff.Exception}
+\Desc{Exception type used to report all exception raised in the module.}
+
+\pagebreak
+\PythonClassHead{aff.Reader}
+{\Syn aff.Reader(filename)}
+\Desc{A Python class representing an AFF reader object. A reader constructor
+requires a file name to open as an AFF file.}
+\RetVal{A Python AFF reader object.}
+
+\PythonFuncHead{aff.Reader.name}
+{\Syn x.name()}
+\Desc{Access to the file name associated with the reader object.}
+\RetVal{A file name associated with the reader object.}
+
+\PythonFuncHead{aff.Reader.chdir}
+{\Syn x.chdir(keypath)}
+\Desc{Change the current directory in the reader object. The \ctext{keypath}
+may be absolute or relative and it may be compound.
+If it is relative, the current directory is used as a
+starting point. On success, the current AFF directory is changed, otherwise it
+remains as it was before the call.}
+\RetVal{None}
+
+\PythonFuncHead{aff.Reader.getcwd}
+{\Syn x.getcwd()}
+\Desc{Retrieve the current directory from the reader object.}
+\RetVal{The absolute AFF directory keypath.}
+
+\pagebreak
+\PythonFuncHead{aff.Reader.check}
+{\Syn x.check()}
+\Desc{Check the integrity of the AFF file. An exception is raised if an
+inconsistency is detected.}
+\RetVal{None}
+
+\PythonFuncHead{aff.Reader.close}
+{\Syn x.close()}
+\Desc{Close a reader object. After the reader object is closed, all accesses
+to it except to retrieve the file name will fail.}
+\RetVal{None}
+
+\PythonFuncHead{aff.Reader.ls}
+{\Syn x.ls(keypath)}
+\Desc{Retrieve subkeys for the \ctext{keypath}. The keypath could be relative
+or absolute and it may be compound. The current reader directory is used
+as a starting point in resolving a relative \ctext{keypath}. An exception is
+raised if the \ctext{keypath} does not exist.}
+\RetVal{A list of subkeys in the \ctext{keypath}.}
+
+\PythonFuncHead{aff.Reader.type}
+{\Syn x.type(keypath)}
+\Desc{Retrieve the type of the element under for the \ctext{keypath}.
+The keypath could be relative
+or absolute and it may be compound. The current reader directory is used
+as a starting point in resolving a relative \ctext{keypath}. An exception is
+raised if the \ctext{keypath} does not exist.}
+\RetVal{Python type object corresponding to the type of the element.}
+
+\PythonFuncHead{aff.Reader.size}
+{\Syn x.size(keypath)}
+\Desc{Retrieve the size of the element under for the \ctext{keypath}.
+The keypath could be relative
+or absolute and it may be compound. The current reader directory is used
+as a starting point in resolving a relative \ctext{keypath}. An exception is
+raised if the \ctext{keypath} does not exist.}
+\RetVal{Number of components in the element.}
+
+\PythonFuncHead{aff.Readr.read}
+{\Syn x.read(keypath)}
+\Desc{Retrieve the element under for the \ctext{keypath}.
+The keypath could be relative
+or absolute and it may be compound. The current reader directory is used
+as a starting point in resolving a relative \ctext{keypath}. An exception is
+raised if the \ctext{keypath} does not exist.}
+\RetVal{Value of the element.}
+
+\PythonClassHead{aff.Writer}
+{\Syn aff.Writer(filename)}
+\Desc{A Python class representing an AFF writer object. A writer contructor 
+requires a file name.}
+\RetVal{A Python AFF writer object.}
+
+\PythonFuncHead{aff.Writer.name}
+{\Syn x.name()}
+\Desc{Access to the file name associated with the writer object.}
+\RetVal{A file name associated with the writer object.}
+
+\PythonFuncHead{aff.Writer.chdir}
+{\Syn x.chdir(keypath)}
+\Desc{Change the current directory in the writer object. The \ctext{keypath}
+may be absolute or relative and it may be compound. If it is relative, the
+current directory is used as a starting point. All components of the
+\ctext{keypath} are created with void data in the writer object. On success,
+the current AFF directory is changed, otherwise it remains as it was before
+the call.}
+\RetVal{None}
+
+\PythonFuncHead{aff.Writer.getcwd}
+{\Syn x.getcwd()}
+\Desc{Retrieve the current directory from the writer object.}
+\RetVal{The absolute AFF directory keypath.}
+
+\PythonFuncHead{aff.Writer.close}
+{\Syn x.close()}
+\Desc{The AFF writer object is finalized and written completely to the file
+system. If anything goes wrong, an exception will be raised indicating the
+problem. After the writer object is closed, all accesses to it except to
+retrieve the file name will fail.}
+\RetVal{None}
+
+\PythonFuncHead{aff.Writer.ls}
+{\Syn x.ls(keypath)}
+\Desc{Retrieve subkeys for the \ctext{keypath}. The keypath could be relative
+or absolute and it may be compound. The current reader directory is used
+as a starting point in resolving a relative \ctext{keypath}. If the 
+\ctext{keypath} does not exist, it will be created before retrieveing its
+subkeys.}
+\RetVal{A list of subkeys in the \ctext{keypath}.}
+
+\PythonFuncHead{aff.Writer.type}
+{\Syn x.type(keypath)}
+{\Syn x.type(keypath)}
+\Desc{Retrieve the type of the element under for the \ctext{keypath}.
+The keypath could be relative
+or absolute and it may be compound. The current reader directory is used
+as a starting point in resolving a relative \ctext{keypath}. If the 
+\ctext{keypath} does not exist, it will be created before retrieveing its
+type.}
+\RetVal{Python type object corresponding to the type of the element.}
+
+\PythonFuncHead{aff.Writer.size}
+{\Syn x.size(keypath)}
+\Desc{Retrieve the size of the element under for the \ctext{keypath}.
+The keypath could be relative
+or absolute and it may be compound. The current reader directory is used
+as a starting point in resolving a relative \ctext{keypath}. If the 
+\ctext{keypath} does not exist, it will be created before retrieveing its
+size.}
+\RetVal{Number of components in the element.}
+
+\PythonFuncHead{aff.Writer.write}
+{\Syn x.write(keypath, data)}
+\Desc{Write the \ctext{data} under for the \ctext{keypath}.
+The keypath could be relative
+or absolute and it may be compound. The current reader directory is used
+as a starting point in resolving a relative \ctext{keypath}. 
+All elements of the \ctext{data} should have the same Python type which
+is used to determine the type of the AFF element.}
+\RetVal{None}
 
 \printindex
 

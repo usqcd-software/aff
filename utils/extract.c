@@ -5,6 +5,9 @@
  * \author Sergey N. Syritsyn
  * 
  * \date Created: 28/08/2007
+ *    2008/06/09 avp -- changes for 
+ *                 mkdir_path() --> aff_writer_mkpath()
+ *                 chdir_path() --> aff_reader_chpath()
  *
  ***************************************************************************/
 #include <errno.h>
@@ -59,7 +62,8 @@ int extract_data( struct AffReader_s *r, const char *dst_fname,
         goto errclean_w;
     }
     struct AffNode_s *w_node;
-    if (NULL == (w_node = mkdir_path(w, aff_writer_root(w), dst_kpath))) {
+    if (NULL == (w_node = aff_writer_mkpath(w, aff_writer_root(w),
+                                            dst_kpath))) {
         fprintf(stderr, "%s: %s[%s]: %s\n", __func__, tmp_fname,
                 dst_kpath, aff_writer_errstr(w));
         goto errclean_w;
@@ -75,7 +79,7 @@ int extract_data( struct AffReader_s *r, const char *dst_fname,
     if (NULL != arg.errstr) {
         fprintf(stderr, "%s: [%s] -> %s[%s]: %s\n", __func__, src_kpath,
                 tmp_fname, dst_kpath, arg.errstr);
-	goto errclean_w;
+        goto errclean_w;
     }
     
     struct stat stat_fb;
@@ -113,7 +117,7 @@ int extract_data( struct AffReader_s *r, const char *dst_fname,
     
     if(NULL != (status = aff_writer_close(w))) {
         fprintf(stderr, "%s: %s: %s\n", __func__, tmp_fname, status);
-	goto errclean_file;
+        goto errclean_file;
     }
     if(rename(tmp_fname, dst_fname)) {
         perror(dst_fname);

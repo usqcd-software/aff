@@ -6,6 +6,9 @@
  * \author Sergey N. Syritsyn
  * 
  * \date Created: 28/08/2007
+ *    2008/06/09 avp -- changes for 
+ *                 mkdir_path() --> aff_writer_mkpath()
+ *                 chdir_path() --> aff_reader_chpath()
  *
  ***************************************************************************/
 #include <string.h>
@@ -32,42 +35,6 @@ char *my_strsep( char *str, char **end, char delim )
     return str;
 }
 
-/* Rules for chdir_path & mkdir_path (same, except for treatment of absent keys)
-   - starting '/' : ignore [rw]_node, start from root
-   - double slash '//': ignore repeated slashes
-   - empty/NULL key_path -?
-   - NULL r_node -?
- */
-struct AffNode_s *chdir_path(struct AffReader_s *r, 
-        struct AffNode_s *r_node, const char *key_path )
-{
-    if( NULL == r ||
-        NULL == key_path )
-        return NULL;
-    char *kpath = malloc( strlen( key_path ) + 1 );
-    char *s, *end = kpath;
-
-    if (kpath == NULL)
-	return NULL;
-
-    strcpy( kpath, key_path );
-    if( '/' == *end )
-        r_node = aff_reader_root( r );
-    if( NULL == r_node ) {
-	free(kpath);
-        return NULL;
-    }
-    
-    while( NULL != ( s = my_strsep( end, &end, '/' ) ) &&
-           r_node != NULL )
-    {
-        if( '\0' == *s )                
-            continue;
-        r_node = aff_reader_chdir( r, r_node, s );
-    }
-    free( kpath );
-    return r_node;
-}
 struct AffNode_s *lookup_path(struct AffReader_s *r, 
         struct AffNode_s *r_node, const char *key_path )
 {
@@ -78,13 +45,13 @@ struct AffNode_s *lookup_path(struct AffReader_s *r,
     char *s, *end = kpath;
 
     if (kpath == NULL)
-	return NULL;
+        return NULL;
 
     strcpy( kpath, key_path );
     if( '/' == *end )
         r_node = aff_reader_root( r );
     if( NULL == r_node ) {
-	free(kpath);
+        free(kpath);
         return NULL;
     }
     
@@ -99,31 +66,4 @@ struct AffNode_s *lookup_path(struct AffReader_s *r,
     }
     free( kpath );
     return r_node;
-}
-
-struct AffNode_s *mkdir_path( struct AffWriter_s *w, 
-        struct AffNode_s *w_node, const char *key_path )
-{
-    if( NULL == w ||
-        NULL == key_path )
-        return NULL;
-    char *kpath = malloc( strlen( key_path ) + 1 );
-    char *s, *end = kpath;
-
-    if (kpath == 0)
-	return NULL;
-
-    strcpy( kpath, key_path );
-
-    if( '/' == *end )                           
-        w_node = aff_writer_root( w );
-    while( NULL != ( s = my_strsep( end, &end, '/' ) ) &&
-           w_node != NULL )
-    {
-        if( '\0' == *s )  
-            continue;
-        w_node = aff_writer_mkdir( w, w_node, s );
-    }
-    free( kpath );
-    return w_node;
 }
