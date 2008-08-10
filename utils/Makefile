@@ -7,15 +7,16 @@ headers = util.h \
           procs.def
 
 sources = lhpc-aff.c \
-          check.c \
-          ls.c \
-	  import.c \
 	  cat.c \
-	  insert.c \
-	  extract.c \
-	  copy.c \
 	  chdir_keypath.c \
+          check.c \
+	  copy.c \
 	  copy_nodes.c \
+	  diff.c \
+	  extract.c \
+	  import.c \
+	  insert.c \
+          ls.c \
 	  common.c
 
 

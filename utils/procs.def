@@ -8,6 +8,7 @@ PROC("insert",   x_insert,  h_insert,  "join several files together; may be used
 PROC("join",     x_insert,  h_join,    "synonym to 'insert'")
 PROC("extract",  x_extract, h_extract, "extract one section from the AFF file")
 PROC("cp",       x_copy,    h_copy,    "copy key from one AFF file to another")
+PROC("diff",	 x_diff,    h_diff,    "compare keys in two files")
 
 /*
 PROC("mv",     x_move,    h_move,    "rename key inside an AFF file")
