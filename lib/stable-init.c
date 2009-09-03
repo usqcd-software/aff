@@ -1,17 +1,18 @@
 #include <stdint.h>
 #include <stdlib.h>
+#include "alloc.h"
 #include "stable-i.h"
 
 static struct AffSTable_s *
 alloc_stable(uint64_t size)
 {
     size_t s = (size_t)(sizeof (struct AffSTable_s)
-			+ (size - 1) * sizeof (struct AffSymbol_s));
+                        + (size - 1) * sizeof (struct AffSymbol_s));
     if (size != (1 + ((s - sizeof (struct AffSTable_s))
-		      / sizeof (struct AffSymbol_s))))
-	return 0;
+                      / sizeof (struct AffSymbol_s))))
+        return 0;
 
-    return malloc(s);
+    return aff_realloc(NULL, s);
 }
 
 struct AffSTable_s *
@@ -24,12 +25,12 @@ aff_stable_init(uint64_t size)
 
     st = alloc_stable(size);
     if (st == 0) {
-	size = BLOCK_SIZE;
-	st = alloc_stable(size);
+        size = BLOCK_SIZE;
+        st = alloc_stable(size);
     }
 
     if (st == 0)
-	return 0;
+        return 0;
 
     st->tr_state = RINIT;
     st->tr_root = 0;

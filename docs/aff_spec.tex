@@ -45,7 +45,7 @@
 \begin{document}
 \centerline{\huge\bf AFF lattice data storage format}
 \vspace{15pt}
-\centerline{\huge\bf Version 2.1}
+\centerline{\huge\bf XXX Version 2.1}
 \vspace{15pt}
 \centerline{\Huge\bf DRAFT}
 \vspace{20pt}
@@ -550,6 +550,15 @@ to the last node is returned.}
   from the size of the node. If \cvar{s} is smaller than the node size, \cvar{d} will receive the initial portion of the node data. If \cvar{s} is larger than the node data, its initial portion of \cvar{d} will be filled with the node data. Values in the rest of the buffer are unspecified in this case.
   }
 \RetVal{Return zero on success, and non-zero on failure. An failure causes an error to be stored in the reader object.}
+\subsection{Memory management}
+\FuncHead{aff\_realloc}
+{\Syn void~*aff\_realloc (void~*ptr, size\_t~size);\par}
+\Desc{All AFF memory allocation and deallocation goes through this function.
+  When the library needs fresh memory, \cvar{ptr} is set to \cvar{NULL},
+  and \cvar{size} to the required memory size in bytes. To
+  deallocate memory, this function is called with \cvar{size} equal to 0.
+  This function may be replaced by the application code if a custom allocator
+  is needed, e.g., to integrate AFF memory management into the application.}
 
 \section{AFF low level interfaces}
 The rest of AFF provides low level access to the library

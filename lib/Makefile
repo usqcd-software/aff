@@ -75,6 +75,7 @@ md5.headers = md5.h
 aff.sources = aff-signature.c \
               aff-version.c \
               aff-namecheck.c \
+              aff-alloc.c \
               waff-init.c \
               waff-fini.c \
               waff-errstr.c \
@@ -116,6 +117,26 @@ coding.sources = encode-type.c \
                  decode-u64.c \
                  decode-double.c
 
+alloc.sources = aff-alloc.c \
+                aff-alloc.c \
+                raff-chpath.c \
+                raff-fini.c \
+                raff-init.c \
+                stable-fini.c \
+                stable-init.c \
+                stable-insert.c \
+                treap-fini.c \
+                treap-init.c \
+                treap-insert.c \
+                tree-fini.c \
+                tree-init.c \
+                tree-insert.c \
+                waff-fini.c \
+                waff-init.c \
+                waff-mkpath.c
+
+alloc.headers = alloc.h
+
 coding.headers = coding.h
 
 io.sources = io.c
@@ -125,7 +146,7 @@ cpp.sources = rwaff.cpp \
 
 io.headers = io.h
 
-interface.parts = aff.h node.h tree.h stable.h treap.h md5.h coding.h
+interface.parts = aff.h node.h tree.h stable.h treap.h md5.h coding.h alloc.h
 
 
 ifeq "$(wildcard $(TOP)/config/$(CONFIG))" ""
@@ -171,6 +192,7 @@ $(md5.sources:%.c=%.o): $(md5.headers)
 $(aff.sources:%.c=%.o): $(aff.headers) md5.h tree.h stable.h coding.h io.h
 $(coding.sources:%.c=%.o): $(coding.headers) node.h
 $(io.sources:%.c=%.o): $(io.headers)
+$(alloc.sources:%.c=%.o): $(alloc.headers)
 $(cpp.sources:%.cpp=%.o): $(interface)
 
 endif

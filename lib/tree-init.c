@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include "stable.h"
+#include "alloc.h"
 #include "node-i.h"
 #include "tree-i.h"
 
@@ -9,12 +10,12 @@ static struct AffTree_s *
 alloc_tree(uint64_t size)
 {
     size_t s = (size_t)(sizeof (struct AffTree_s)
-			+ (size - 1) * sizeof (struct AffNode_s));
+                        + (size - 1) * sizeof (struct AffNode_s));
     if (size != (1 + ((s - sizeof (struct AffTree_s))
-		      / sizeof (struct AffNode_s))))
-	return 0;
+                      / sizeof (struct AffNode_s))))
+        return 0;
 
-    return malloc(s);
+    return aff_realloc(NULL, s);
 }
 
 
@@ -28,12 +29,12 @@ aff_tree_init(struct AffSTable_s *stable, uint64_t size)
 
     tt = alloc_tree(size);
     if (tt == 0) {
-	size = BLOCK_SIZE;
-	tt = alloc_tree(size);
+        size = BLOCK_SIZE;
+        tt = alloc_tree(size);
     }
 
     if (tt == 0)
-	return 0;
+        return 0;
 
     tt->tr_state = RSTEP;
     tt->tr_root = 0;

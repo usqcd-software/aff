@@ -2,6 +2,7 @@
 #define MARK_c7329614_7d7a_4efe_9f6d_87477961bc99
 
 /* AFF library information */
+#define AFF_VERSION "XXX Version 2.1.0x $Id$"
 const char *aff_version(void);
 int aff_name_check(const char *name);
 
@@ -9,8 +10,6 @@ int aff_name_check(const char *name);
  *
  * writer() prepares to write an aff file. If it exists the file is deleted
  *          before opening.
- * close() commits the data to the disk and closes the file. It returns 0
- *          if no error occured, an a non-zero error status otherwise.
  * errstr() returns the first error recorded in the object.
  * put_*() write data to the file and set node's type. A put could be called
  *          at most once on a node.
