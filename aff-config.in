@@ -5,7 +5,7 @@ cc='@CC@'
 cflags='@CFLAGS@ -I@prefix_include@'
 libs='@LIBS@ -llhpc-aff'
 ldflags='@LDFLAGS@ -L@prefix_lib@'
-version='XXX LHPC AFF v.2.1.0x $Id$'
+version='LHPC AFF v.2.1.0 $Id$'
 
 help() {
   cat << EOF
