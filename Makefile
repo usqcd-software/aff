@@ -19,7 +19,7 @@ all install:
 export CONFIG
 else
 include config/$(CONFIG)
-	
+
 #you can transfer all the parameters to sub-make with preceding directive
 # export VAR1 VAR2 ...
 ## Sergey Syritsyn 11/6/2007
@@ -75,6 +75,7 @@ do.install: lhpc-aff-config docs/aff_spec.pdf COPYRIGHT
 	mkdir -p $(prefix_math)
 	cp math/aff.m $(prefix_math)/aff.m
 
+.PHONY: lhpc-aff-config
 lhpc-aff-config: Makefile config/$(CONFIG) aff-config.in
 	sed -e 's?@CC@?$(install.CC)?' \
             -e 's?@CFLAGS@?$(install.CFLAGS)?' \
