@@ -59,6 +59,7 @@ aff_writer(const char *file_name)
     aff->data_hdr.size = 0;
     aff->data_hdr.records = 0;
     aff->data_hdr.start = AFF_HEADER_SIZE2;
+    aff->version = 2; /* upgrade to 3 only if a post version 2 key is created */
 
     return aff;
 

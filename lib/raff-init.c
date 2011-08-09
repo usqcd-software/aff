@@ -77,17 +77,10 @@ error:
 
 static int
 read_sig(struct AffReader_s *aff,
-         const uint8_t sig[AFF_SIG_SIZE],
-         const uint8_t *aff_sig)
+         const uint8_t sig[AFF_SIG_SIZE])
 {
     uint32_t d_exp;
     
-    if (memcmp(sig, aff_sig, AFF_SIG_ID_SIZE) != 0) {
-        aff->error = "AFF signature mismatch";
-        aff->fatal_error = 1;
-        return 1;
-    }
-
     if (sig[AFF_SIG_OFF_DBITS] != sizeof (double) * CHAR_BIT) {
         aff->error = "AFF size of double mismatch";
         aff->fatal_error = 1;
@@ -127,8 +120,15 @@ read_header1(struct AffReader_s *aff,
     uint8_t md5_read[16];
     uint8_t buf[AFF_HEADER_SIZE1 - AFF_SIG_SIZE];
 
-    if (read_sig(aff, sig, aff_signature1))
+    if (read_sig(aff, sig))
         return 1;
+
+    if (memcmp(sig, aff_signature1, AFF_SIG_ID_SIZE) != 0) {
+        aff->error = "AFF signature mismatch";
+        aff->fatal_error = 1;
+        return 1;
+    }
+    aff->version = 2;
 
     if (fread(buf, sizeof (buf), 1, aff->file) != 1) {
         aff->error = "Reading V1 header failed";
@@ -160,8 +160,18 @@ read_header2(struct AffReader_s *aff,
     uint8_t md5_read[16];
     uint8_t buf[AFF_HEADER_SIZE2 - AFF_SIG_SIZE];
 
-    if (read_sig(aff, sig, aff_signature2))
+    if (read_sig(aff, sig))
         return 1;
+
+    if (memcmp(sig, aff_signature2, AFF_SIG_ID_SIZE) == 0) {
+        aff->version = 2;
+    } else if (memcmp(sig, aff_signature3, AFF_SIG_ID_SIZE) == 0) {
+        aff->version = 3;
+    } else {
+        aff->error = "AFF signature mismatch";
+        aff->fatal_error = 1;
+        return 1;
+    }
 
     if (fread(buf, sizeof (buf), 1, aff->file) != 1) {
         aff->error = "Reading V2 header failed";

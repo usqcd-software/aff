@@ -12,11 +12,12 @@ enum {
     AFF_SIG_OFF_SIZE  =  28,
     AFF_SIG_SIZE      =  32,
     AFF_HEADER_SIZE1  = 144, /* the full header size V1 */
-    AFF_HEADER_SIZE2  = 168  /* the full header size V2 */
+    AFF_HEADER_SIZE2  = 168  /* the full header size V2 and V3 */
 };
 
 #define AFF_SIG1       "LHPC AFF version 1.0"
 #define AFF_SIG2       "LHPC AFF version 2.0"
+#define AFF_SIG3       "LHPC AFF version 3.0"
 
 struct WSection_s {
     uint64_t         start;
@@ -29,6 +30,7 @@ struct AffWriter_s {
     struct AffMD5_s      header_md5;
     int                  header_size;
     const char          *error;
+    int                  version;
     int                  fatal_error;
 
     FILE                *file;
@@ -51,6 +53,7 @@ struct RSection_s {
 
 struct AffReader_s {
     const char          *error;
+    int                  version;
     int                  fatal_error;
 
     FILE                *file;
@@ -66,6 +69,7 @@ struct AffReader_s {
 
 extern uint8_t aff_signature1[];
 extern uint8_t aff_signature2[];
+extern uint8_t aff_signature3[];
 
 char *aff_strsep(char *str, char **end, char delim);
 

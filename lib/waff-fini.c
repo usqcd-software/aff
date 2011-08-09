@@ -148,13 +148,24 @@ aff_writer_close(struct AffWriter_s *aff)
     }
 
     aff_md5_init(&aff->header_md5);
-    aff->header_size = strlen((const char *)aff_signature2) + 1;
-    if (fwrite(aff_signature2, aff->header_size, 1, aff->file) != 1) {
-        aff->error = "AFF Signature writing erorr";
-        aff->fatal_error = 1;
-        goto end;
+    {
+        const uint8_t *sig = 0;
+        switch (aff->version) {
+        case 2: sig = (const uint8_t *)aff_signature2; break;
+        case 3: sig = (const uint8_t *)aff_signature3; break;
+        default:
+            aff->error = "AFF internal error";
+            aff->fatal_error = 1;
+            goto end;
+        }
+        aff->header_size = strlen((char *)sig) + 1;
+        if (fwrite(sig, aff->header_size, 1, aff->file) != 1) {
+            aff->error = "AFF Signature writing erorr";
+            aff->fatal_error = 1;
+            goto end;
+        }
+        aff_md5_update(&aff->header_md5, sig, aff->header_size);
     }
-    aff_md5_update(&aff->header_md5, aff_signature2, aff->header_size);
 
     buffer[0] = sizeof (double) * CHAR_BIT;
     buffer[1] = FLT_RADIX;

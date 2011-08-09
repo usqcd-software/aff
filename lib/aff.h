@@ -2,9 +2,10 @@
 #define MARK_c7329614_7d7a_4efe_9f6d_87477961bc99
 
 /* AFF library information */
-#define AFF_VERSION "XXX Version 2.1.0x $Id$"
+#define AFF_VERSION "XXX Version 3.0.0x $Id$"
 const char *aff_version(void);
-int aff_name_check(const char *name);
+int aff_name_check2(const char *name);
+int aff_name_check3(const char *name);
 
 /* AFF objects. Writers.
  *
@@ -24,6 +25,7 @@ struct AffNode_s;
 struct AffWriter_s *aff_writer(const char *file_name);
 const char *aff_writer_close(struct AffWriter_s *aff);
 const char *aff_writer_errstr(struct AffWriter_s *aff);
+int aff_writer_clearerr(struct AffWriter_s *aff);
 struct AffSTable_s *aff_writer_stable(struct AffWriter_s *aff);
 struct AffTree_s *aff_writer_tree(struct AffWriter_s *aff);
 struct AffNode_s *aff_writer_root(struct AffWriter_s *aff);
@@ -66,6 +68,7 @@ struct AffReader_s;
 struct AffReader_s *aff_reader(const char *file_name);
 void aff_reader_close(struct AffReader_s *aff);
 const char *aff_reader_errstr(struct AffReader_s *aff);
+int aff_reader_clearerr(struct AffReader_s *aff);
 struct AffTree_s *aff_reader_tree(struct AffReader_s *aff);
 struct AffSTable_s *aff_reader_stable(struct AffReader_s *aff);
 int aff_reader_check(struct AffReader_s *aff);
@@ -92,5 +95,6 @@ int aff_node_get_complex(struct AffReader_s *aff,
                          struct AffNode_s *n,
                          double _Complex *d,
                          uint32_t s);
+int aff_reader_namecheck(struct AffReader_s *aff, const char *name);
 
 #endif /* !defined(MARK_c7329614_7d7a_4efe_9f6d_87477961bc99) */
