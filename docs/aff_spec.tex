@@ -45,14 +45,14 @@
 \begin{document}
 \centerline{\huge\bf AFF lattice data storage format}
 \vspace{15pt}
-\centerline{\huge\bf XXX Version 2.1}
+\centerline{\huge\bf Version 3.0.0}
 \vspace{15pt}
-\centerline{\Huge\bf DRAFT}
-\vspace{20pt}
+%\centerline{\Huge\bf DRAFT}
+%\vspace{20pt}
 \centerline{\it Andrew~V.~Pochinsky, Sergey~N.~Syritsyn}
 \centerline{\it MIT CTP, Cambridge, MA}
 \vspace{10pt}
-\centerline{December 4, 2007}
+\centerline{August 9, 2011}
 \vspace{20pt}
 
 \noindent This document describes the AFF data storage format. 
@@ -153,15 +153,12 @@ very close to UNIX file names. A data key is a sequence of subkeys,
 which we write here as a UNIX file name:
 \ctext{/key1/key2/.../keyN}. The top node in an AFF file is its
 \term{root}, called \ctext{/}. Part of a key between consecutive
-slashes is called a \term{subkey}. To simplify transitions between AFF
-and XML, we restrict the character set allowed in subkeys to the
-following grammar (this is a subset of XML names):
+slashes is called a \term{subkey}. 
 
 \begin{eqnarray*}
-\langle subkey \rangle & ::= & (\langle Letter \rangle | \verb|_| | \verb|:| ) | \langle nameChar \rangle^{*} \\
-\langle nameChar \rangle & ::= & \langle Letter \rangle | \langle Digit \rangle | \verb|.| | \verb|-| | \verb|_| | \verb|:|
+\langle subkey \rangle & ::= & \langle nameChar \rangle ^{+} \\
+\langle nameChar \rangle & ::= & \textrm{any character except  }  \verb|/|
 \end{eqnarray*}
-The subkeys are case-sensitive as the are in XML.
 
 \section{Data file layout}
 An AFF file has:
@@ -215,7 +212,7 @@ Total & 32 \\ \hline
 \end{tabular}
 \ec
 \end{table}
-Signature strings for a historical version of the file format and the
+Signature strings for historical versions of the file format and the
 current version are given in table~\ref{tab:signature}.
 \begin{table}[h]
 \bc
@@ -224,6 +221,7 @@ current version are given in table~\ref{tab:signature}.
  Version & Signature string \\ \hline\hline
  V1 & \verb|"LHPC AFF version 1.0"| \\ \hline
  V2 & \verb|"LHPC AFF version 2.0"| \\ \hline
+ V3 & \verb|"LHPC AFF version 3.0"| \\ \hline
 \end{tabular}
 \ec
 \end{table}
@@ -240,7 +238,7 @@ V2 files.
 \bc
 \caption{Symbol table, tree, and data header layout}\label{tab:shdr}
 \begin{tabular}{|l|c|c|} \hline
- & Size, bytes (V1) & Size, bytes (V2) \\ \hline\hline
+ & Size, bytes (V1) & Size, bytes (V2, V3) \\ \hline\hline
 Offset  & 8 & 8\\ \hline
 Size in bytes & 8 & 8\\ \hline
 Number of records & 0 & 8\\ \hline
@@ -355,19 +353,6 @@ calling \ctext{clearerr}. An object with a fatal error may only be closed.
 {\Syn const char *aff\_version (void);\par}
 \Desc{Returns a string identifying the library version.}
 \RetVal{A non-\NULL\ string.}
-
-\FuncHead{aff\_name\_check}
-{\Syn int aff\_name\_check (const char *name);\par}
-\Desc{Check that \cvar{name} satisfies the constraints of section~\ref{file-org} and returns a non-zero
-value if it does not.}
-\RetVal{Zero if \cvar{name} is a permissible name, a non-zero value otherwise.}
-
-\FuncHead{aff\_path\_check}
-{\Syn int aff\_path\_check (const char *path);\par}
-\Desc{Check that each component of \cvar{path} satisfies the constraints of
-section~\ref{file-org} and returns a non-zero value if it does not. If there is
-no components in \cvar{path}, and it is not \ctext{"/"}, signal an error.}
-\RetVal{Zero if \cvar{path} is a permissible path, a non-zero value otherwise.}
 
 \subsection{Writers}
 \FuncHead{aff\_writer}
@@ -493,6 +478,12 @@ reader, or an error is not fatal, the reader will be set to clean state and
 a zero will be returned. If \cvar{aff} has a fatal error, the reader remains in
 error and a non zero value is returned.}
 \RetVal{Return zero if the reader is cleaned, a non-zero value otherwise.}
+
+\FuncHead{aff\_reader\_namecheck}
+{\Syn int aff\_name\_check (struct~AffReader\_s~*aff, const char *name);\par}
+\Desc{Check that \cvar{name} satisfies the constraints of section~\ref{file-org} and returns a non-zero
+value if it does not.}
+\RetVal{Zero if \cvar{name} is a permissible name, a non-zero value otherwise.}
 
 \FuncHead{aff\_reader\_stable}
 {\Syn struct~AffSTable\_s~*aff\_reader\_stable (const~struct~AffReader\_s~*aff);\par}

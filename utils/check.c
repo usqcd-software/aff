@@ -65,22 +65,6 @@ check_node(struct AffNode_s *node, void *ptr)
         arg->result = 1;
         return;
     }
-#if 0 /* XXX */
-    switch (arg->r->version) {
-    case 2: status = aff_name_check2(name); break;
-    case 2: status = aff_name_check2(name); break;
-    default:
-        fprintf(stderr, "lhpc-aff: INTERNAL ERROR: AffReader->version = %d\n", arg->r->version);
-        arg->result = 1;
-        return;
-    }
-    if (status != 0) {
-        fprintf(stderr, "lhpc-aff: error processing %s: bad node name %s\n",
-                arg->name, name);
-        arg->result = 1;
-        return;
-    }
-#endif /* XXX */
     type = aff_node_type(node);
     size = aff_node_size(node);
     switch (type) {

@@ -2,7 +2,7 @@
 #define MARK_c7329614_7d7a_4efe_9f6d_87477961bc99
 
 /* AFF library information */
-#define AFF_VERSION "XXX Version 3.0.0x $Id$"
+#define AFF_VERSION "Version 3.0.0 $Id$"
 const char *aff_version(void);
 int aff_name_check2(const char *name);
 int aff_name_check3(const char *name);
